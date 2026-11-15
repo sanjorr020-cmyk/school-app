@@ -501,6 +501,48 @@
     }
   });
 
+  // Очередь уроков: прошедший ближайший урок уходит в «Прошедшие», следующий из очереди становится ближайшим.
+  function advanceLessons(s) {
+    s.lessonQueue = Array.isArray(s.lessonQueue) ? s.lessonQueue : [];
+    s.lessonsDone = Array.isArray(s.lessonsDone) ? s.lessonsDone : [];
+    let moved = false;
+    while (s.nextLesson && Number.isFinite(lessonStart(s.nextLesson)) && lessonStart(s.nextLesson) + 60 * 60 * 1000 < Date.now()) {
+      s.lessonsDone.push(s.nextLesson);
+      s.nextLesson = s.lessonQueue.length ? s.lessonQueue.shift() : null;
+      moved = true;
+    }
+    if (moved) save();
+  }
+  function markCurrentDone(s) {
+    if (!s.nextLesson) return;
+    s.lessonQueue = Array.isArray(s.lessonQueue) ? s.lessonQueue : [];
+    s.lessonsDone = Array.isArray(s.lessonsDone) ? s.lessonsDone : [];
+    s.lessonsDone.push(s.nextLesson);
+    s.nextLesson = s.lessonQueue.length ? s.lessonQueue.shift() : null;
+    save();
+  }
+  function pastLessonsView(s) {
+    const done = (s && s.lessonsDone) || [];
+    if (!done.length) return '';
+    return '<section class="past-lessons"><h3>Прошедшие уроки</h3>' + done.slice().reverse().map((d) =>
+      '<div class="card"><span>' + esc(formatDate(d.date)) + ' · ' + esc(d.title || 'Урок') + '</span></div>').join('') + '</section>';
+  }
+  function lessonQueueBlock(s) {
+    const queue = s.lessonQueue || [];
+    const done = s.lessonsDone || [];
+    return '<section class="lesson-queue"><h3>Очередь уроков</h3>' +
+      '<p class="summary">Прошедший урок переходит в «Прошедшие», следующий из очереди становится ближайшим. Урок можно отметить проведённым вручную.</p>' +
+      '<p class="summary">Сейчас: ' + (s.nextLesson ? esc(formatDate(s.nextLesson.date)) + ' · ' + esc(s.nextLesson.time) : 'ближайшего урока нет') +
+      ' · в очереди: ' + queue.length + ' · проведено: ' + done.length + '</p>' +
+      (s.nextLesson ? '<button class="att-btn" type="button" data-mark-lesson-done>Отметить текущий урок проведённым</button>' : '') +
+      queue.map((q) => '<div class="card"><span>' + esc(formatDate(q.date)) + ' · ' + esc(q.time) + ' · ' + esc(q.title || 'Урок') + '</span><button class="att-btn" type="button" data-remove-queued="' + esc(q.id) + '">Убрать</button></div>').join('') +
+      '<form id="lesson-queue-form" class="flow-form"><h4>Добавить урок в очередь</h4>' +
+      '<label>Дата<input name="date" type="date" required></label><label>Время по Астане (UTC+5)<input name="time" type="time" required></label>' +
+      '<label>Название урока<input name="title" maxlength="120"></label><label>Преподаватель<input name="teacher" maxlength="120"></label>' +
+      '<label>Ссылка на Zoom или Meet (HTTPS)<input name="url" type="url" placeholder="https://meet.google.com/…"></label>' +
+      '<button class="btn" type="submit">Добавить в очередь</button></form><p id="lesson-queue-status" role="status" class="summary"></p></section>';
+  }
+
   function lessonView(s) {
     if (!s) return '<div class="empty">Выберите ученика для просмотра урока.</div>';
     const poster = videoPreview('lesson');
@@ -556,6 +598,44 @@
       esc(s.teacherComment || 'Комментария пока нет.') + '</p><h3>Следующая цель</h3><p>' +
       esc(s.nextGoal || 'Определите цель вместе с преподавателем.') + '</p>' + estimateView(s) + '</section>';
   }
+  $('student-detail').addEventListener('submit', (e) => {
+    if (e.target.id !== 'lesson-queue-form') return;
+    e.preventDefault();
+    const s = state().students.find((x) => x.id === adminStudentId);
+    if (!s) return;
+    const f = new FormData(e.target);
+    const date = String(f.get('date') || '');
+    const time = String(f.get('time') || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+      $('lesson-queue-status').textContent = 'Укажите дату и время урока.';
+      return;
+    }
+    const rawUrl = String(f.get('url') || '').trim();
+    const url = rawUrl ? validUrl(rawUrl) : '';
+    if (rawUrl && !url) {
+      $('lesson-queue-status').textContent = 'Ссылка должна начинаться с https://';
+      return;
+    }
+    s.lessonQueue = Array.isArray(s.lessonQueue) ? s.lessonQueue : [];
+    s.lessonQueue.push({ id: uid(), date, time, title: String(f.get('title') || '').trim(), teacher: String(f.get('teacher') || '').trim(), url: url || '' });
+    s.lessonQueue.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+    if (!s.nextLesson) s.nextLesson = s.lessonQueue.shift();
+    save();
+    window.schoolRender();
+  });
+  $('student-detail').addEventListener('click', (e) => {
+    const s = state().students.find((x) => x.id === adminStudentId);
+    if (!s) return;
+    if (e.target.hasAttribute('data-mark-lesson-done')) {
+      markCurrentDone(s);
+      window.schoolRender();
+    } else if (e.target.dataset.removeQueued) {
+      s.lessonQueue = (s.lessonQueue || []).filter((q) => q.id !== e.target.dataset.removeQueued);
+      save();
+      window.schoolRender();
+    }
+  });
+
   function adminEditor() {
     const detail = $('student-detail').querySelector('.detail');
     if (!detail) return;
@@ -566,7 +646,7 @@
     const levels = (window.SCHOOL_CONFIG || {}).levels || [];
     const tariffOptions = confirmedPrices().map((p) => '<option value="' + esc(p.id) + '"' +
       (s.package && s.package.priceId === p.id ? ' selected' : '') + '>' + esc(p.label || p.id) + ' · ' + p.lessons + ' занятий</option>').join('');
-    detail.insertAdjacentHTML('beforeend', '<form id="learning-admin-form" class="flow-form"><h3>Ближайший онлайн-урок</h3>' +
+    detail.insertAdjacentHTML('beforeend', lessonQueueBlock(s) + '<form id="learning-admin-form" class="flow-form"><h3>Ближайший онлайн-урок</h3>' +
       '<label>Дата<input name="date" type="date" value="' + esc(l.date || '') + '"></label><label>Время по Астане (UTC+5)<input name="time" type="time" value="' + esc(l.time || '') + '"></label>' +
       '<label>Продолжительность, минут (если известна)<input name="duration" type="number" min="15" max="240" step="1" value="' + esc(l.durationMinutes || '') + '"></label>' +
       '<label>Название урока<input name="title" maxlength="120" value="' + esc(l.title || '') + '"></label><label>Преподаватель<input name="teacher" maxlength="120" value="' + esc(l.teacher || '') + '"></label>' +
@@ -592,6 +672,7 @@
         '</p><p class="answer-copy">' + esc(h.answer || 'Ответа в этом браузере пока нет.') + '</p><button class="att-btn" type="button" data-delete-homework="' + esc(h.id) + '">Удалить задание</button></article>').join('') + '</div>');
   }
   let adminStudentId = null;
+
   $('students-list').addEventListener('click', (e) => {
     if (e.target.dataset.openStudent) { adminStudentId = e.target.dataset.openStudent; window.schoolRender(); }
   });
@@ -679,7 +760,8 @@
   window.onSchoolRender = function () {
     if (previousRender) previousRender();
     const s = selectedStudent();
-    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s);
+    if (s) advanceLessons(s);
+    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s) + pastLessonsView(s);
     $('homework-view').innerHTML = homeworkView(s);
     $('learning-progress').innerHTML = progressView(s);
     showSection(section);
