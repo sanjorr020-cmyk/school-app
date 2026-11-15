@@ -2,6 +2,7 @@
 // использует window.schoolState / schoolSave / schoolRender и хук window.onSchoolRender.
 
 (function () {
+  const ADMIN_MODE = new URLSearchParams(window.location.search).get('demo') === 'admin';
   'use strict';
 
   const CONFIG = window.SCHOOL_CONFIG || {};
@@ -280,6 +281,7 @@
 
 // Демо-путь ученика. Выбор вида не является авторизацией.
 (function () {
+  const ADMIN_MODE = new URLSearchParams(window.location.search).get('demo') === 'admin';
   'use strict';
   if (!document.getElementById('demo-entry')) return;
   const $ = (id) => document.getElementById(id);
@@ -388,6 +390,9 @@
     fillEntry();
     $('demo-entry').requestSubmit();
   });
+  if (!ADMIN_MODE) {
+    document.querySelectorAll('.entry-roles, #demo-entry, #demo-creds, [data-demo-pick], #change-demo-role').forEach((el) => { el.hidden = true; });
+  }
   $('load-learning-demo').addEventListener('click', () => {
     let sample = state().students.find((s) => s.learningDemo === true);
     if (!sample) {
@@ -407,8 +412,7 @@
       state().students.push(sample);
     }
     fillEntry(); $('demo-student').value = sample.id; $('demo-role').value = 'student'; fillEntry();
-    showDemoLogin(sample.id);
-    persist('demo-entry-status', 'Учебный пример готов. Войдите демо‑данными ниже. Ссылка урока ведёт на главную Google Meet, не в реальную встречу.');
+    $('demo-entry').requestSubmit();
   });
   function selectedStudent() {
     return state().students.find((s) => s.id === (role === 'student' ? studentId : $('parent-student').value));
