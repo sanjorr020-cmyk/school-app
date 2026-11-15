@@ -610,6 +610,20 @@
       esc(formatDate(plan.assessedAt)) + ' — около ' + plan.remainingLessons + ' занятий до следующего уровня. Преподаватель: ' +
       esc(plan.assessedBy) + '.</p><p class="summary">Срок зависит от регулярности, самостоятельной практики и результатов проверки уровня. Это оценка на указанную дату, а не обратный отсчёт.</p></section>';
   }
+  // Программа курса и вопросы-ответы: тексты берутся из config.js (course, faq).
+  function courseView() {
+    const c = (window.SCHOOL_CONFIG || {}).course;
+    if (!c || !Array.isArray(c.modules) || !c.modules.length) return '';
+    return '<section class="course-plan"><h3>Программа курса</h3>' + c.modules.map((m, i) =>
+      '<details class="plan-module"' + (i === 0 ? ' open' : '') + '><summary>' + esc(m.title) + '</summary><ul>' +
+      (m.lessons || []).map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul></details>').join('') + '</section>';
+  }
+  function faqView() {
+    const items = (window.SCHOOL_CONFIG || {}).faq;
+    if (!Array.isArray(items) || !items.length) return '';
+    return '<section class="faq"><h3>Частые вопросы</h3>' + items.map((f) =>
+      '<details class="faq-item"><summary>' + esc(f.q) + '</summary><p>' + esc(f.a) + '</p></details>').join('') + '</section>';
+  }
   function progressView(s) {
     if (!s) return '';
     return '<section class="progress-focus"><h2>Цель обучения</h2>' +
@@ -887,7 +901,7 @@
     if (s) advanceLessons(s);
     $('next-lesson-view').innerHTML = lessonView(s) + studySummary(s) + packageView(s) + lessonRowsView(s) + classMessagesView(s);
     $('homework-view').innerHTML = homeworkView(s);
-    $('learning-progress').innerHTML = progressView(s);
+    $('learning-progress').innerHTML = progressView(s) + courseView() + faqView();
     showSection(section);
     if (role === 'admin') { adminEditor(); organizeProfile(state().students.find((x) => x.id === adminStudentId)); }
     $('tab-students').classList.toggle('has-profile',!!$('student-detail').querySelector('.profile-detail'));

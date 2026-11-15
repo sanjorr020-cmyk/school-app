@@ -370,3 +370,11 @@ body { background:#f7f4ee; }
 .study-summary button:nth-child(2) { background:#e8f6f4; border-color:#a9dcd5; }
 .lesson-focus { box-shadow:0 8px 22px #1c2b401a; border-left-color:#f06143; }
 .lesson-chip { background:#f06143; color:#fff; }
+
+/* Программа курса и вопросы-ответы */
+.course-plan, .faq { margin-top:22px; }
+.plan-module, .faq-item { background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:8px; padding:0 14px; }
+.plan-module summary, .faq-item summary { cursor:pointer; padding:12px 0; font-weight:600; list-style:none; }
+.plan-module summary::-webkit-details-marker, .faq-item summary::-webkit-details-marker { display:none; }
+.plan-module ul { margin:0 0 12px; padding-left:18px; color:var(--muted); }
+.faq-item p { margin:0 0 12px; color:var(--muted); }
