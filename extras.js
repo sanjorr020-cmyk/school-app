@@ -339,11 +339,10 @@
   // Точка на «Домашке»: есть невыполненное задание со сроком в ближайшие 3 дня.
   function updateNavDot() {
     const s = selectedStudent();
-    const today = dateISO(new Date());
-    const soon = new Date(Date.now() + 3 * 86400000);
-    const limit = dateISO(soon);
-    const pending = s && (s.homework || []).some((h) => !h.answer && h.due >= today && h.due <= limit);
-    $('nav-dot').hidden = !pending;
+    const n = s ? (s.homework || []).filter((h) => !h.answer).length : 0;
+    const el = $('nav-dot');
+    el.textContent = n ? 'Без ответа: ' + n : '';
+    el.hidden = !n;
   }
   function enter(nextRole, id) {
     if (nextRole === 'student' && !state().students.some((s) => s.id === id)) {
@@ -422,6 +421,7 @@
           due: dateISO(due), materials: 'https://learnenglish.britishcouncil.org/grammar' }]
       };
       state().students.push(sample);
+      if (!state().messages.some((m) => m.class === sample.class)) state().messages.push({ id: uid(), class: sample.class, text: 'Демо: разговорный клуб в субботу, 11:00. Запись у администратора.', date: dateISO(new Date()) });
     }
     fillEntry(); $('demo-student').value = sample.id; $('demo-role').value = 'student'; fillEntry();
     $('demo-entry').requestSubmit();
@@ -529,11 +529,27 @@
     s.nextLesson = s.lessonQueue.length ? s.lessonQueue.shift() : null;
     save();
   }
-  function pastLessonsView(s) {
-    const done = (s && s.lessonsDone) || [];
-    if (!done.length) return '';
-    return '<section class="past-lessons"><h3>Прошедшие уроки</h3>' + done.slice().reverse().map((d) =>
-      '<div class="card"><span>' + esc(formatDate(d.date)) + ' · ' + esc(d.title || 'Урок') + '</span></div>').join('') + '</section>';
+  const LESSON_ICONS = {
+    calendar: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+  };
+  function lessonRow(l, label, icon, past) {
+    return '<div class="lesson-row' + (past ? ' is-past' : '') + '"><span class="lesson-date">' + esc(formatDate(l.date)) + (l.time ? ' · ' + esc(l.time) : '') +
+      '</span><span class="lesson-title">' + esc(l.title || 'Урок') + '</span><span class="lesson-status">' + LESSON_ICONS[icon] + esc(label) + '</span></div>';
+  }
+  function lessonRowsView(s) {
+    const queue = s.lessonQueue || [];
+    const done = s.lessonsDone || [];
+    if (!queue.length && !done.length) return '';
+    return '<section class="lesson-list"><h3>Уроки</h3>' +
+      queue.map((l) => lessonRow(l, 'Запланирован', 'calendar', false)).join('') +
+      done.slice().reverse().map((l) => lessonRow(l, 'Прошедший', 'clock', true)).join('') + '</section>';
+  }
+  function classMessagesView(s) {
+    const msgs = (state().messages || []).filter((m) => m.class === s.class).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    if (!msgs.length) return '';
+    return '<section class="class-messages"><h3>Сообщения от школы</h3>' + msgs.map((m) =>
+      '<div class="card"><span>' + esc(formatDate(m.date)) + ' · ' + esc(m.text) + '</span></div>').join('') + '</section>';
   }
   function lessonQueueBlock(s) {
     const queue = s.lessonQueue || [];
@@ -559,7 +575,7 @@
     const start = lessonStart(l);
     if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ожидаем</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
-    return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ' + esc(l.title || 'Английский язык') + '</h2>' +
+    return '<section class="lesson-focus">' + poster + '<span class="lesson-chip">' + (start <= Date.now() ? 'Идёт сейчас' : 'Ближайший') + '</span><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
       '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet' : 'Подключиться к уроку') + '</a>' :
@@ -769,7 +785,7 @@
     if (previousRender) previousRender();
     const s = selectedStudent();
     if (s) advanceLessons(s);
-    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s) + pastLessonsView(s);
+    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s) + lessonRowsView(s) + classMessagesView(s);
     $('homework-view').innerHTML = homeworkView(s);
     $('learning-progress').innerHTML = progressView(s);
     showSection(section);

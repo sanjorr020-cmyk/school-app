@@ -191,3 +191,19 @@ body[data-demo-role="student"] .homework-section>h2 { display:none; }
  th,td { padding:9px 6px; font-size:12px; }
 }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; } }
+
+/* Список уроков, статусы, сообщения школы, метка «Ближайший» */
+.lesson-chip { display:inline-block; font-size:12px; font-weight:600; padding:3px 10px; border-radius:999px; background:var(--accent); color:var(--accent-ink, #0c1633); margin-bottom:6px; }
+.lesson-list { margin-top:24px; }
+.lesson-row { display:grid; grid-template-columns: 1fr; gap:2px; padding:12px 14px; border:1px solid var(--border); border-radius:12px; margin-bottom:8px; background:var(--surface); }
+.lesson-date { font-size:13px; color:var(--muted); }
+.lesson-title { font-weight:600; }
+.lesson-status { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+.lesson-status svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.lesson-row.is-past { opacity:.6; }
+.class-messages { margin-top:24px; }
+.student-nav .nav-dot { display:inline-block; width:auto; height:auto; padding:2px 7px; border-radius:999px; font-size:11px; line-height:1.3; background:var(--accent); color:var(--accent-ink, #0c1633); margin-left:0; vertical-align:baseline; }
+.student-nav .nav-dot[hidden] { display:none; }
+.student-nav button { position: relative; }
+.student-nav .nav-dot { position: absolute; top: 2px; right: 6px; white-space: nowrap; margin-left: 0; font-size: 10px; padding: 1px 6px; }
+.student-nav .nav-dot { position: static; display: inline-block; white-space: nowrap; margin-top: 2px; }
