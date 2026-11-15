@@ -197,3 +197,40 @@ input::placeholder { color:#b9c7e9; opacity:1; }
  #tab-parent>.row select { max-width:72%; }
 }
 @media(prefers-reduced-motion:reduce) { .panel { animation:none; } }
+
+/* Демо-вход и путь ученика; фирменная тема остаётся прежней. */
+[hidden] { display:none!important; }
+.demo-login { max-width:460px; margin:0 auto; padding:55px 22px calc(40px + env(safe-area-inset-bottom)); }
+.demo-login>.eyebrow { margin:22px 0; }
+.demo-login>p { color:var(--muted); }
+.demo-login>.att-btn { margin:22px 0 12px; padding:12px; width:100%; }
+.flow-form { display:grid; gap:16px; margin-top:22px; }
+.flow-form label { display:grid; gap:7px; font-size:13px; color:var(--muted); }
+.flow-form input,.flow-form select,.flow-form textarea { box-sizing:border-box; width:100%; min-width:0; padding:12px; border:1px solid var(--border); border-radius:9px; background:var(--surface-2); color:white; font:inherit; font-size:16px; }
+.flow-form textarea { resize:vertical; }
+.flow-form .btn { width:100%; }
+.student-nav { display:grid; grid-template-columns:repeat(3,1fr); width:100%; gap:8px; }
+.student-nav button { padding:12px 8px; color:var(--muted); background:#102d70; border:0; border-radius:8px; font:inherit; min-height:44px; cursor:pointer; }
+.student-nav button.active { color:#071e60; background:var(--yellow); font-weight:700; }
+body[data-demo-role="student"] #tabs { display:none; }
+body[data-demo-role="student"] #tab-parent>.row { display:none; }
+body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-status,body[data-demo-role="student"] #tab-parent>h3 { display:none; }
+.lesson-focus,.progress-focus { border:1px solid var(--border); border-radius:16px; background:var(--surface); padding:24px; margin:22px 0; }
+.lesson-focus { border-top:4px solid var(--yellow); }
+.lesson-focus h2 { font-size:27px; line-height:1.15; }
+.lesson-when { font-weight:700; font-size:20px; margin-bottom:6px; }
+.join-lesson { display:flex; justify-content:center; align-items:center; margin:22px 0 12px; text-decoration:none; text-align:center; }
+.btn:disabled { opacity:.6; cursor:default; }
+.homework-section { margin:30px 0; }
+.homework-card { padding:20px; margin:16px 0; background:var(--surface); border:1px solid var(--border); border-radius:14px; }
+.homework-card h3 { margin:0 0 12px; font-size:17px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.homework-card a { color:var(--yellow); text-underline-offset:4px; }
+.answer-copy,.progress-focus p { white-space:pre-wrap; overflow-wrap:anywhere; }
+#learning-admin-form { border-top:1px solid var(--border); padding-top:15px; }
+@media(max-width:640px) {
+ body[data-demo-role="student"] .student-nav { position:fixed; z-index:20; left:0; right:0; bottom:0; padding:12px 14px calc(12px + env(safe-area-inset-bottom)); background:#061950; border-top:1px solid var(--border); }
+ body[data-demo-role="student"] .wrap { padding-bottom:calc(100px + env(safe-area-inset-bottom)); }
+ .lesson-focus,.progress-focus,.homework-card { padding:18px; }
+ .demo-login { padding-top:35px; }
+}
+
