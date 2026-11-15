@@ -137,10 +137,9 @@ function renderStudents() {
     .map((cls) => `
       <h3>Группа ${esc(cls)} (${byClass[cls].length})</h3>
       ${studentsOf(cls).map((s) => `
-        <div class="card">
-          <div>${esc(s.name)}</div>
-          <button class="att-btn" data-open-student="${s.id}">Подробнее</button>
-          <button class="att-btn" data-del-student="${s.id}">Удалить</button>
+        <div class="card student-row">
+          <button type="button" class="student-open" data-open-student="${s.id}"><span class="student-avatar" aria-hidden="true">${esc(s.name.slice(0,1))}</span><span class="student-name">${esc(s.name)}<small>${esc(s.class)}</small></span><span class="student-balance" data-student-balance="${s.id}"></span><span class="row-chevron" aria-hidden="true">›</span></button>
+          <details class="row-actions"><summary aria-label="Действия с учеником ${esc(s.name)}">⋯</summary><button type="button" class="att-btn" data-del-student="${s.id}">Удалить ученика</button></details>
         </div>`).join('')}
     `).join('');
 }
