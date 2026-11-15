@@ -100,6 +100,7 @@ document.querySelectorAll('.tab').forEach((btn) => {
     document.querySelectorAll('.panel').forEach((p) =>
       p.classList.toggle('active', p.id === `tab-${btn.dataset.tab}`));
     renderAll();
+    window.scrollTo({ top: 0, behavior: 'auto' });
   });
 });
 
@@ -436,6 +437,8 @@ $('attendance-list').addEventListener('click', async (e) => {
 
 // ---------- Кабинет родителя ----------
 function renderParent() {
+  const overview = $('learning-overview');
+  if (overview) overview.innerHTML = '';
   const box = $('parent-view');
   const sid = $('parent-student').value;
   const s = state.students.find((x) => x.id === sid);
@@ -443,6 +446,12 @@ function renderParent() {
     box.innerHTML = '<div class="empty">Добавьте ученика, чтобы увидеть его кабинет.</div>';
     return;
   }
+  const levels = (s.levels || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+  const currentLevel = levels.length ? levels[levels.length - 1].level : '—';
+  const attended = Object.values(state.attendance).filter((day) => day[s.id] === 'present' || day[s.id] === 'late').length;
+  const used = s.package ? Object.entries(state.attendance).filter(([date, day]) => date >= s.package.start && ['present', 'late', 'absent'].includes(day[s.id])).length : 0;
+  const remaining = s.package ? Math.max(0, s.package.total - used) : '—';
+  if (overview) overview.innerHTML = '<div class="overview-card"><strong>' + esc(currentLevel) + '</strong><span>Текущий уровень</span></div><div class="overview-card"><strong>' + attended + '</strong><span>Посещено занятий</span></div><div class="overview-card"><strong>' + remaining + '</strong><span>Осталось в пакете</span></div>';
   const date = $('parent-date').value || todayISO();
   if (!$('parent-date').value) $('parent-date').value = date;
 
@@ -540,7 +549,7 @@ function applyBranding() {
   if (CONFIG.accent) root.setProperty('--accent', CONFIG.accent);
   if (CONFIG.accent2) root.setProperty('--accent-2', CONFIG.accent2);
   if (CONFIG.name) {
-    document.title = CONFIG.name + ' — Школа разговорного английского';
+    document.title = CONFIG.name + ' — Личный кабинет';
     $('brand-name').textContent = CONFIG.name;
   }
   if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
