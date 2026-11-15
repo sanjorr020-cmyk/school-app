@@ -378,3 +378,11 @@ body { background:#f7f4ee; }
 .plan-module summary::-webkit-details-marker, .faq-item summary::-webkit-details-marker { display:none; }
 .plan-module ul { margin:0 0 12px; padding-left:18px; color:var(--muted); }
 .faq-item p { margin:0 0 12px; color:var(--muted); }
+
+/* Чек-лист «без признаков ИИ-интерфейса»: два размера скругления, без теней, без стрелок-декора, читаемый серый */
+:root { --muted:#4f5b72; }
+.card, .plan-module, .faq-item, .lesson-row, .lesson-focus, .overview-card, .study-summary button { border-radius:10px; box-shadow:none; }
+.btn, .att-btn, .tab, .student-nav button, .lesson-chip, .nav-dot { border-radius:8px; }
+.summary-arrow { display:none; }
+.lesson-focus { border-left-width:1px; border-left-color:var(--border); }
+.hero-art { box-shadow:none; border-radius:12px; }
