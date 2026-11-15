@@ -276,3 +276,5 @@ body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-s
 .nav-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-left:4px; vertical-align:middle; }
 .nav-dot[hidden] { display:none; }
 #section-title { margin: 6px 0 14px; }
+/* Карточки обзора: значение не переносится по слогам (например, Elementary) */
+.overview-card strong { white-space: nowrap; font-size: clamp(16px, 4.6vw, 22px); overflow-wrap: normal; word-break: keep-all; }
