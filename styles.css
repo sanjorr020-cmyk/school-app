@@ -361,3 +361,12 @@ input::placeholder,textarea::placeholder { color:#8694a6; }
  .lesson-row { grid-template-columns:1fr; }
  .lesson-row .lesson-status { grid-column:1; grid-row:auto; justify-self:start; margin-top:7px; }
 }
+
+/* Визуальные акценты: тёплый фон, иллюстрация без людей, цветные карточки */
+body { background:#f7f4ee; }
+.hero-art { border-radius:18px; overflow:hidden; margin:0 0 16px; box-shadow:0 6px 18px #1c2b4018; }
+.hero-art svg { display:block; width:100%; height:auto; }
+.study-summary button:nth-child(1) { background:#fff1e9; border-color:#f6c9b4; }
+.study-summary button:nth-child(2) { background:#e8f6f4; border-color:#a9dcd5; }
+.lesson-focus { box-shadow:0 8px 22px #1c2b401a; border-left-color:#f06143; }
+.lesson-chip { background:#f06143; color:#fff; }
