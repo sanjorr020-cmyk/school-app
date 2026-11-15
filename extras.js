@@ -50,55 +50,45 @@
   // ---------- Карточка ученика: место, пакет, уровни ----------
   let selectedId = null;
 
+  const detailUI = window.schoolDetailUI = { studentId: null, tab: 'overview', editors: new Set() };
   function renderDetail() {
     const box = $('student-detail');
-    if (!box) return;
     const s = state().students.find((x) => x.id === selectedId);
-    if (!s) {
-      box.innerHTML = '';
-      return;
+    if (!s) { box.innerHTML = ''; return; }
+    if (detailUI.studentId !== s.id) {
+      detailUI.studentId = s.id; detailUI.tab = 'overview'; detailUI.editors.clear();
     }
-    const left = lessonsLeft(s);
-    const levels = sortedLevels(s);
-    box.innerHTML = `
-      <div class="detail">
-        <h3>${esc(s.name)}, ${esc(s.class)}</h3>
-        <div class="row filter">
-          <label>Место занятий:
-            <select id="ex-place">${PLACES.map((p) => `<option ${s.place === p ? 'selected' : ''}>${esc(p)}</option>`).join('')}</select>
-          </label>
-        </div>
-
-        <h3>Пакет занятий</h3>
-        ${s.package
-          ? `<p class="summary">Осталось ${left} из ${s.package.total}. Пакет с ${fmt(s.package.start)}.</p>
-             ${left <= 2 ? '<p class="warn">Пора продлить пакет.</p>' : ''}`
-          : '<p class="summary">Пакет ещё не оформлен.</p>'}
-        <div class="row">
-          <input id="ex-pkg-total" type="number" min="1" max="60" value="${s.package ? s.package.total : PACKAGE_SIZE}" />
-          <input id="ex-pkg-start" type="date" value="${s.package ? s.package.start : todayISO()}" />
-          <button type="button" class="btn" id="ex-pkg-save">Сохранить пакет</button>
-        </div>
-        <p class="summary">Занятия списываются автоматически: каждая отметка «был», «опоздал» или «не был» с даты начала пакета уменьшает остаток.</p>
-
-        <h3>История уровня</h3>
-        ${levels.length ? levels.map((l) => `
-          <div class="card">
-            <div><b>${esc(l.level)}</b> <span class="meta">${fmt(l.date)}</span></div>
-            <button type="button" class="att-btn" data-ex-del-level="${l.id}">Удалить</button>
-          </div>`).join('') : '<div class="empty">Уровни ещё не записаны.</div>'}
-        <div class="row">
-          <select id="ex-level">${LEVELS.map((l) => `<option>${esc(l)}</option>`).join('')}</select>
-          <input id="ex-level-date" type="date" value="${todayISO()}" />
-          <button type="button" class="btn" id="ex-level-add">Добавить уровень</button>
-        </div>
-      </div>`;
+    const left = lessonsLeft(s), levels = sortedLevels(s);
+    const current = levels.length ? levels[levels.length - 1].level : 'Не указан';
+    const tabs = [['overview','Обзор'],['lessons','Уроки'],['homework','Задания'],['package','Пакет и уровень']];
+    box.innerHTML = '<div class="detail profile-detail">' +
+      '<button id="profile-back" type="button" class="back-button">← Все ученики</button>' +
+      '<header class="profile-header"><span class="profile-avatar" aria-hidden="true">' + esc(s.name.slice(0,1)) + '</span><div><h2>' + esc(s.name) + '</h2><p class="meta">' + esc(s.class) + (s.place ? ' · ' + esc(s.place) : '') + '</p></div></header>' +
+      '<div class="profile-facts"><div><span>Уровень</span><strong>' + esc(current) + '</strong></div><div><span>Осталось занятий</span><strong>' + (left == null ? 'Нет пакета' : left + ' из ' + s.package.total) + '</strong></div></div>' +
+      '<nav class="profile-tabs" role="tablist" aria-label="Карточка ученика">' + tabs.map(([key,label]) =>
+        '<button type="button" role="tab" id="profile-tab-' + key + '" aria-controls="profile-panel-' + key + '" aria-selected="' + (detailUI.tab === key) + '" tabindex="' + (detailUI.tab === key ? 0 : -1) + '" data-profile-tab="' + key + '">' + label + '</button>').join('') + '</nav>' +
+      tabs.map(([key,label]) => '<section class="profile-panel" id="profile-panel-' + key + '" role="tabpanel" aria-labelledby="profile-tab-' + key + '"' + (detailUI.tab === key ? '' : ' hidden') + '></section>').join('') +
+      '<div id="profile-place-source"><details class="editor-disclosure" data-profile-editor="place"><summary>Изменить место занятий</summary><div class="row filter"><label>Место занятий<select id="ex-place">' +
+        PLACES.map((p) => '<option' + (s.place === p ? ' selected' : '') + '>' + esc(p) + '</option>').join('') + '</select></label></div></details></div>' +
+      '<div id="profile-package-source"><section class="profile-block"><h3>Пакет занятий</h3>' +
+        (s.package ? '<p class="package-balance">Осталось ' + left + ' из ' + s.package.total + '</p><p class="meta">Начало пакета: ' + fmt(s.package.start) + '</p>' : '<p class="meta">Пакет пока не оформлен</p>') +
+        '<details class="editor-disclosure" data-profile-editor="package"><summary>' + (s.package ? 'Изменить пакет' : 'Оформить пакет') + '</summary>' +
+        '<div class="flow-form"><label>Количество занятий<input id="ex-pkg-total" type="number" min="1" max="60" value="' + (s.package ? s.package.total : PACKAGE_SIZE) + '"></label>' +
+        '<label>Дата начала<input id="ex-pkg-start" type="date" value="' + (s.package ? esc(s.package.start) : todayISO()) + '"></label><button type="button" class="btn" id="ex-pkg-save">Сохранить пакет</button></div>' +
+        '<p class="summary">По текущим правилам отметки «был», «опоздал» и «не был» с даты начала пакета списывают занятие.</p></details></section>' +
+        '<section class="profile-block"><h3>История уровня</h3>' +
+        (levels.length ? levels.map((l) => '<div class="card"><div><b>' + esc(l.level) + '</b><span class="meta"> · ' + fmt(l.date) + '</span></div>' +
+          '<button type="button" class="att-btn" data-ex-del-level="' + esc(l.id) + '">Удалить</button></div>').join('') : '<p class="meta">История пока пустая</p>') +
+        '<details class="editor-disclosure" data-profile-editor="level"><summary>Добавить уровень</summary><div class="flow-form"><label>Уровень<select id="ex-level">' +
+        LEVELS.map((l) => '<option>' + esc(l) + '</option>').join('') + '</select></label><label>Дата оценки<input id="ex-level-date" type="date" value="' + todayISO() + '"></label>' +
+        '<button type="button" class="btn" id="ex-level-add">Добавить уровень</button></div></details></section></div></div>';
   }
 
   function bindDetail() {
     const box = $('student-detail');
     box.addEventListener('click', (e) => {
       const t = e.target;
+      if (t.id === 'profile-back') { selectedId = null; render(); window.scrollTo(0, 0); return; }
       const s = state().students.find((x) => x.id === selectedId);
       if (!s) return;
       if (t.id === 'ex-pkg-save') {
@@ -108,7 +98,7 @@
           alert('Укажите число занятий от 1 до 60 и дату начала пакета');
           return;
         }
-        s.package = { total, start };
+        s.package = { ...s.package, total, start };
         save();
         render();
       } else if (t.id === 'ex-level-add') {
@@ -129,13 +119,14 @@
       if (s) {
         s.place = e.target.value;
         save();
+        render();
       }
     });
   }
 
   function bindStudents() {
     $('students-list').addEventListener('click', (e) => {
-      const id = e.target.dataset.openStudent;
+      const id = e.target.closest('[data-open-student]')?.dataset.openStudent;
       if (!id) return;
       selectedId = id;
       render();
@@ -145,10 +136,9 @@
 
   // В списке учеников показываем остаток занятий рядом с кнопкой «Подробнее».
   function decorateStudents() {
-    document.querySelectorAll('[data-open-student]').forEach((btn) => {
-      const s = state().students.find((x) => x.id === btn.dataset.openStudent);
-      if (!s || !s.package) return;
-      btn.insertAdjacentHTML('beforebegin', `<span class="meta">осталось ${lessonsLeft(s)} </span>`);
+    document.querySelectorAll('[data-student-balance]').forEach((el) => {
+      const s = state().students.find((x) => x.id === el.dataset.studentBalance);
+      el.textContent = s && s.package ? lessonsLeft(s) + ' занятий' : 'Без пакета';
     });
   }
 
@@ -332,7 +322,7 @@
     $('learning-overview').hidden = role === 'student' && name !== 'progress';
     $('parent-extra').hidden = role === 'student' && name !== 'progress';
     $('parent-view').hidden = role === 'student';
-    const titles = { lesson: 'Урок', homework: 'Домашка', progress: 'Прогресс' };
+    const titles = { lesson: 'Мои уроки', homework: 'Задания', progress: 'Прогресс' };
     $('section-title').textContent = role === 'student' ? (titles[name] || '') : 'Вид ученика';
     updateNavDot();
   }
@@ -341,7 +331,8 @@
     const s = selectedStudent();
     const n = s ? (s.homework || []).filter((h) => !h.answer).length : 0;
     const el = $('nav-dot');
-    el.textContent = n ? 'Без ответа: ' + n : '';
+    el.textContent = n ? String(n) : '';
+    el.setAttribute('aria-label','Заданий без ответа: ' + n);
     el.hidden = !n;
   }
   function enter(nextRole, id) {
@@ -491,10 +482,11 @@
       'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
     return lines.map(foldIcsLine).join('\r\n') + '\r\n';
   }
-  $('next-lesson-view').addEventListener('click', (e) => {
+  document.addEventListener('click', (e) => {
     if (!e.target.closest('[data-add-calendar]')) return;
-    const s = selectedStudent();
-    const status = $('calendar-status');
+    const inProfile = e.target.closest('.profile-detail');
+    const s = inProfile ? state().students.find((x) => x.id === adminStudentId) : selectedStudent();
+    const status = e.target.closest('.lesson-focus').querySelector('.calendar-status');
     try {
       const content = calendarContent(s, Date.now());
       const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
@@ -538,6 +530,7 @@
       '</span><span class="lesson-title">' + esc(l.title || 'Урок') + '</span><span class="lesson-status">' + LESSON_ICONS[icon] + esc(label) + '</span></div>';
   }
   function lessonRowsView(s) {
+    if (!s) return '';
     const queue = s.lessonQueue || [];
     const done = s.lessonsDone || [];
     if (!queue.length && !done.length) return '';
@@ -546,6 +539,7 @@
       done.slice().reverse().map((l) => lessonRow(l, 'Прошедший', 'clock', true)).join('') + '</section>';
   }
   function classMessagesView(s) {
+    if (!s) return '';
     const msgs = (state().messages || []).filter((m) => m.class === s.class).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     if (!msgs.length) return '';
     return '<section class="class-messages"><h3>Сообщения от школы</h3>' + msgs.map((m) =>
@@ -580,7 +574,7 @@
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet' : 'Подключиться к уроку') + '</a>' :
         '<button class="btn" type="button" disabled>Ссылка пока не добавлена</button>') +
-      '<button type="button" class="att-btn calendar-button" data-add-calendar>Добавить урок в календарь</button><p id="calendar-status" role="status" class="summary"></p>' +
+      '<button type="button" class="att-btn calendar-button" data-add-calendar>Добавить урок в календарь</button><p class="calendar-status summary" role="status"></p>' +
       (l.demo ? '<p class="summary">Демо-ссылка открывает Google Meet без подключения к уроку.</p>' : '') + '</section>';
   }
   function homeworkView(s) {
@@ -618,7 +612,7 @@
   }
   function progressView(s) {
     if (!s) return '';
-    return '<section class="progress-focus"><h2>Ваш следующий шаг</h2>' +
+    return '<section class="progress-focus"><h2>Цель обучения</h2>' +
       (s.teacherComment ? '<h3>Комментарий преподавателя</h3><p>' + esc(s.teacherComment) + '</p>' : '') +
       (s.nextGoal ? '<h3>Следующая цель</h3><p>' + esc(s.nextGoal) + '</p>' : '') + estimateView(s) + '</section>';
   }
@@ -698,7 +692,8 @@
   let adminStudentId = null;
 
   $('students-list').addEventListener('click', (e) => {
-    if (e.target.dataset.openStudent) { adminStudentId = e.target.dataset.openStudent; window.schoolRender(); }
+    const btn = e.target.closest('[data-open-student]');
+    if (btn) { adminStudentId = btn.dataset.openStudent; window.schoolRender(); }
   });
   $('student-detail').addEventListener('submit', (e) => {
     if (role !== 'admin') return;
@@ -719,9 +714,15 @@
       const old = s.nextLesson;
       s.nextLesson = date ? { date, time, durationMinutes: duration, title: values.get('title').trim(), teacher: values.get('teacher').trim(), url,
         demo: !!(old && old.demo && url === old.url) } : null;
-      s.teacherComment = values.get('comment').trim(); s.nextGoal = values.get('goal').trim();
+      if (values.has('comment')) s.teacherComment = values.get('comment').trim();
+      if (values.has('goal')) s.nextGoal = values.get('goal').trim();
       const ok = persist(); window.schoolRender();
       $('learning-admin-status').textContent = ok ? 'Урок и прогресс сохранены в этом браузере.' : 'Не удалось сохранить в браузере.';
+    } else if (e.target.id === 'progress-admin-form') {
+      s.teacherComment = String(values.get('comment') || '').trim();
+      s.nextGoal = String(values.get('goal') || '').trim();
+      const ok = persist(); window.schoolRender();
+      $('progress-admin-status').textContent = ok ? 'Комментарий и цель сохранены.' : 'Не удалось сохранить в браузере.';
     } else if (e.target.id === 'motivation-admin-form') {
       const targetLevel = values.get('targetLevel');
       const remainingLessons = Number(values.get('remainingLessons'));
@@ -780,16 +781,116 @@
     const tg = window.Telegram && window.Telegram.WebApp;
     if (a && tg && tg.openLink && validUrl(a.href)) { e.preventDefault(); tg.openLink(a.href); }
   });
+
+  function organizeProfile(s) {
+    const detail = $('student-detail').querySelector('.profile-detail');
+    if (!detail || !s) return;
+    const ui = window.schoolDetailUI;
+    const overview = $('profile-panel-overview'), lessons = $('profile-panel-lessons');
+    const homework = $('profile-panel-homework'), pkg = $('profile-panel-package');
+    const lessonForm = $('learning-admin-form');
+    const progressForm = document.createElement('form');
+    progressForm.id = 'progress-admin-form'; progressForm.className = 'flow-form';
+    ['comment','goal'].forEach((name) => {
+      const field = lessonForm.querySelector('[name="' + name + '"]');
+      if (field) progressForm.appendChild(field.closest('label'));
+    });
+    progressForm.insertAdjacentHTML('beforeend','<button type="submit" class="btn">Сохранить комментарий и цель</button>');
+    const progressStatus = document.createElement('p');
+    progressStatus.id = 'progress-admin-status'; progressStatus.className = 'summary'; progressStatus.setAttribute('role','status');
+    const l = s.nextLesson;
+    overview.innerHTML = '<section class="profile-block"><h3>Ближайший урок</h3>' +
+      (l ? '<p class="overview-lesson-title">' + esc(l.title || 'Английский язык') + '</p><p class="meta">' +
+        esc(formatDate(l.date)) + ' · ' + esc(l.time) + ' · Астана (UTC+5)</p>' : '<p class="meta">Урок пока не назначен</p>') +
+      '<button type="button" class="text-button" data-profile-tab="lessons">Перейти к урокам →</button></section>' +
+      (s.teacherComment || s.nextGoal || s.levelEstimate ? progressView(s) :
+        '<section class="profile-block"><h3>Цель обучения</h3><p class="meta">Цель и комментарий преподавателя ещё не добавлены</p></section>');
+    function editor(panel, form, status, title, key) {
+      const box = document.createElement('details');
+      box.className = 'editor-disclosure'; box.dataset.profileEditor = key;
+      const summary = document.createElement('summary'); summary.textContent = title; box.appendChild(summary);
+      if (form) box.appendChild(form); if (status) box.appendChild(status);
+      panel.appendChild(box);
+      return box;
+    }
+    editor(overview,progressForm,progressStatus,'Изменить комментарий и цель','progress');
+    overview.appendChild($('profile-place-source'));
+    lessons.innerHTML = lessonView(s);
+    const saveLesson = lessonForm.querySelector('button[type="submit"]');
+    saveLesson.textContent = 'Сохранить урок';
+    editor(lessons,lessonForm,$('learning-admin-status'),s.nextLesson ? 'Изменить ближайший урок' : 'Назначить ближайший урок','lesson');
+    const queue = detail.querySelector('.lesson-queue');
+    const queueForm = $('lesson-queue-form'), queueStatus = $('lesson-queue-status');
+    editor(queue,queueForm,queueStatus,'Добавить урок в очередь','queue');
+    const instruction = queue.querySelector('p.summary');
+    if (instruction) editor(queue,instruction,null,'Как работает очередь','queue-help');
+    lessons.appendChild(queue);
+    const homeworkList = detail.querySelector('.admin-homework-list');
+    homework.innerHTML = '<div class="panel-heading"><h3>Домашние задания</h3><span class="count-label">' + (s.homework || []).length + '</span></div>';
+    if (!(s.homework || []).length) homework.insertAdjacentHTML('beforeend','<p class="meta">Заданий пока нет</p>');
+    homework.appendChild(homeworkList);
+    editor(homework,$('homework-admin-form'),$('homework-admin-status'),'Добавить задание','homework');
+    pkg.appendChild($('profile-package-source'));
+    editor(pkg,$('motivation-admin-form'),$('motivation-admin-status'),'Изменить тариф и оценку срока','estimate');
+    detail.querySelectorAll('[data-profile-editor]').forEach((el) => { el.open = ui.editors.has(el.dataset.profileEditor); });
+  }
+  function selectProfileTab(name) {
+    const ui = window.schoolDetailUI;
+    if (!['overview','lessons','homework','package'].includes(name)) return;
+    ui.tab = name;
+    $('student-detail').querySelectorAll('button[role="tab"]').forEach((btn) => {
+      const active = btn.dataset.profileTab === name;
+      btn.setAttribute('aria-selected',String(active)); btn.tabIndex = active ? 0 : -1;
+    });
+    ['overview','lessons','homework','package'].forEach((key) => { $('profile-panel-' + key).hidden = key !== name; });
+  }
+  $('student-detail').addEventListener('click',(e) => {
+    const button = e.target.closest('[data-profile-tab]');
+    if (button) selectProfileTab(button.dataset.profileTab);
+  });
+  $('student-detail').addEventListener('keydown',(e) => {
+    if (!e.target.matches('[role="tab"]')) return;
+    const tabs = Array.from($('student-detail').querySelectorAll('button[role="tab"]'));
+    const at = tabs.indexOf(e.target);
+    const key = e.key;
+    if (!['ArrowLeft','ArrowRight','Home','End'].includes(key)) return;
+    e.preventDefault();
+    const next = key === 'Home' ? 0 : key === 'End' ? tabs.length-1 : (at + (key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    selectProfileTab(tabs[next].dataset.profileTab); tabs[next].focus();
+  });
+  $('student-detail').addEventListener('toggle',(e) => {
+    const key = e.target.dataset.profileEditor;
+    if (!key) return;
+    const editors = window.schoolDetailUI.editors;
+    if (e.target.open) editors.add(key); else editors.delete(key);
+  },true);
+  function studySummary(s) {
+    if (!s) return '';
+    const pending = (s.homework || []).filter((h) => !h.answer).length;
+    const history = (s.levels || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+    const level = history.length ? history[history.length-1].level : 'Не указан';
+    return '<div class="study-summary"><button type="button" data-go-study="homework"><span>Задания</span><strong>' +
+      (pending ? pending + ' без ответа' : 'Нет заданий без ответа') + '</strong><span class="summary-arrow" aria-hidden="true">→</span></button>' +
+      '<button type="button" data-go-study="progress"><span>Мой уровень</span><strong>' + esc(level) +
+      '</strong><span class="summary-arrow" aria-hidden="true">→</span></button></div>';
+  }
+  document.addEventListener('click',(e) => {
+    const btn = e.target.closest('[data-go-study]');
+    if (!btn || role !== 'student') return;
+    showSection(btn.dataset.goStudy); window.scrollTo(0,0);
+  });
+
   const previousRender = window.onSchoolRender;
   window.onSchoolRender = function () {
     if (previousRender) previousRender();
     const s = selectedStudent();
     if (s) advanceLessons(s);
-    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s) + lessonRowsView(s) + classMessagesView(s);
+    $('next-lesson-view').innerHTML = lessonView(s) + studySummary(s) + packageView(s) + lessonRowsView(s) + classMessagesView(s);
     $('homework-view').innerHTML = homeworkView(s);
     $('learning-progress').innerHTML = progressView(s);
     showSection(section);
-    if (role === 'admin') adminEditor();
+    if (role === 'admin') { adminEditor(); organizeProfile(state().students.find((x) => x.id === adminStudentId)); }
+    $('tab-students').classList.toggle('has-profile',!!$('student-detail').querySelector('.profile-detail'));
   };
   $('brand-name').setAttribute('tabindex', '-1');
   fillEntry();
