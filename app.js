@@ -41,8 +41,8 @@ function applyTelegramTheme() {
   TG.ready();
   TG.expand();
   // Сохраняем фирменную тему школы внутри Telegram.
-  if (TG.setHeaderColor) TG.setHeaderColor('#071e60');
-  if (TG.setBackgroundColor) TG.setBackgroundColor('#071e60');
+  if (TG.setHeaderColor) TG.setHeaderColor('#101e3a');
+  if (TG.setBackgroundColor) TG.setBackgroundColor('#101e3a');
 }
 
 let state = load();
