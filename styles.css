@@ -246,3 +246,8 @@ body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-s
 .entry-form { margin-top: 16px; }
 .entry-form .btn { display: none; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+.demo-creds { margin-top: 14px; padding: 14px; border: 1px dashed var(--border); border-radius: 14px; display: grid; gap: 10px; }
+.demo-creds[hidden] { display: none; }
+.demo-creds label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.demo-creds input { padding: 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; }

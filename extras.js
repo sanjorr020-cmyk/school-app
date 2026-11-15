@@ -368,6 +368,26 @@
     const btn = e.target.closest('[data-learning-section]');
     if (btn) { showSection(btn.dataset.learningSection); window.scrollTo(0, 0); }
   });
+
+  // Демо‑экран входа: логин и пароль вымышленные, ничего не проверяются.
+  function showDemoLogin(sampleId) {
+    const box = $('demo-creds');
+    box.hidden = false;
+    box.dataset.sampleId = sampleId;
+    box.innerHTML = `
+      <p class="meta">Демо‑данные для входа. Вымышленные, не проверяются, защиты нет.</p>
+      <label>Логин<input value="alex.demo" readonly /></label>
+      <label>Пароль<input type="password" value="demo-pass-2026" readonly /></label>
+      <button type="button" class="btn" id="demo-creds-go">Войти</button>`;
+  }
+  $('demo-creds').addEventListener('click', (e) => {
+    if (e.target.id !== 'demo-creds-go') return;
+    const id = $('demo-creds').dataset.sampleId;
+    $('demo-student').value = id;
+    $('demo-role').value = 'student';
+    fillEntry();
+    $('demo-entry').requestSubmit();
+  });
   $('load-learning-demo').addEventListener('click', () => {
     let sample = state().students.find((s) => s.learningDemo === true);
     if (!sample) {
@@ -387,7 +407,8 @@
       state().students.push(sample);
     }
     fillEntry(); $('demo-student').value = sample.id; $('demo-role').value = 'student'; fillEntry();
-    persist('demo-entry-status', 'Учебный пример готов. Нажмите «Открыть кабинет». Ссылка урока ведёт на главную Google Meet, не в реальную встречу.');
+    showDemoLogin(sample.id);
+    persist('demo-entry-status', 'Учебный пример готов. Войдите демо‑данными ниже. Ссылка урока ведёт на главную Google Meet, не в реальную встречу.');
   });
   function selectedStudent() {
     return state().students.find((s) => s.id === (role === 'student' ? studentId : $('parent-student').value));
