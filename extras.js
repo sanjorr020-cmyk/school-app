@@ -299,7 +299,7 @@
     try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password ? url.href : ''; }
     catch (_) { return ''; }
   };
-  const formatDate = (iso) => new Date(iso + 'T12:00:00+06:00').toLocaleDateString('ru-RU', {
+  const formatDate = (iso) => new Date(iso + 'T12:00:00+05:00').toLocaleDateString('ru-RU', {
     timeZone: 'Asia/Almaty', day: 'numeric', month: 'long', year: 'numeric'
   });
   function persist(statusId, successText) {
@@ -422,12 +422,91 @@
     const item = previews[kind] || previews.lesson;
     return '<figure class="video-preview"><img src="assets/' + item[0] + '.svg" width="1672" height="941" alt="' + item[1] + ', символ паузы по центру" loading="lazy"><figcaption>Превью · сгенерированный кадр</figcaption></figure>';
   }
+
+  const lessonStart = (lesson) => {
+    if (!lesson || !/^\d{4}-\d{2}-\d{2}$/.test(lesson.date || '') || !/^\d{2}:\d{2}$/.test(lesson.time || '')) return NaN;
+    return new Date(lesson.date + 'T' + lesson.time + ':00+05:00').getTime();
+  };
+  const confirmedPrices = () => ((window.SCHOOL_CONFIG || {}).priceList || []).filter((p) =>
+    p && p.confirmed === true && typeof p.id === 'string' && p.source &&
+    Number.isInteger(p.lessons) && p.lessons > 0 && Number.isFinite(p.totalPriceKzt) && p.totalPriceKzt > 0);
+  function packageView(s) {
+    if (!s) return '';
+    const pkg = s.package;
+    if (!pkg || !(pkg.total > 0)) return '<section class="package-focus"><h2>Пакет занятий</h2><p>Пакет пока не оформлен. Уточните программу у администратора.</p></section>';
+    const used = Object.entries(state().attendance).filter(([date, day]) =>
+      date >= pkg.start && ['present', 'late', 'absent'].includes(day[s.id])).length;
+    const left = Math.max(0, pkg.total - used);
+    const price = confirmedPrices().find((p) => p.id === pkg.priceId && p.lessons === pkg.total);
+    const money = (n) => new Intl.NumberFormat('ru-KZ', { maximumFractionDigits: 2 }).format(n) + ' ₸';
+    return '<section class="package-focus"><p class="eyebrow">МОЙ ПАКЕТ</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
+      '<progress value="' + Math.min(used, pkg.total) + '" max="' + esc(pkg.total) + '" aria-label="Списано занятий в пакете"></progress>' +
+      '<p>Использовано ' + Math.min(used, pkg.total) + ' из ' + esc(pkg.total) + ' занятий.</p>' +
+      (used > pkg.total ? '<p class="summary">Отметок сверх пакета: ' + (used - pkg.total) + '.</p>' : '') +
+      '<p class="summary">По текущим правилам демо списываются посещения, опоздания и пропуски с даты начала пакета.</p>' +
+      (price ? '<p class="lesson-price">Одно занятие — ' + money(price.totalPriceKzt / price.lessons) +
+        '</p><p class="summary">' + esc(price.label || 'Пакет') + ': ' + money(price.totalPriceKzt) + ' за ' + price.lessons +
+        ' занятий. Источник прайса: ' + esc(price.source) + '.</p>' :
+        '<p class="summary">Стоимость появится после подтверждения прайса школы и выбора тарифа администратором.</p>') +
+      (left <= 2 ? '<p class="package-reminder">Пакет подходит к концу. Обсудите следующие занятия с администратором.</p>' : '') + '</section>';
+  }
+  const icsEscape = (value) => String(value || '').replace(/\\/g, '\\\\').replace(/\r\n|\n|\r/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
+  const foldIcsLine = (line) => {
+    const encoder = new TextEncoder();
+    let result = '', size = 0;
+    for (const char of line) {
+      const bytes = encoder.encode(char).length;
+      if (size + bytes > 75) { result += '\r\n '; size = 1; }
+      result += char; size += bytes;
+    }
+    return result;
+  };
+  function calendarContent(s, now) {
+    const l = s && s.nextLesson;
+    const start = lessonStart(l);
+    if (!Number.isFinite(start)) throw new Error('Сначала добавьте дату и время урока.');
+    const stamp = (ms) => new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const duration = Number(l.durationMinutes);
+    const details = ['Время урока: ' + l.date + ' ' + l.time + ' по Астане (UTC+5).',
+      'Преподаватель: ' + (l.teacher || 'Уточняется')];
+    if (!duration) details.push('Продолжительность не указана.');
+    if (l.demo) details.push('Учебный пример. Ссылка ведёт на главную сервиса, не в реальное занятие.');
+    const url = validUrl(l.url);
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//FASTSPEAK//Lessons//RU', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT', 'UID:' + encodeURIComponent(s.id) + '-' + l.date.replace(/-/g, '') + l.time.replace(':', '') + '@fastspeak.local',
+      'DTSTAMP:' + stamp(now), 'DTSTART:' + stamp(start)];
+    if (Number.isInteger(duration) && duration >= 15 && duration <= 240) lines.push('DTEND:' + stamp(start + duration * 60000));
+    lines.push('SUMMARY:' + icsEscape('FASTSPEAK · ' + (l.title || 'Английский язык')),
+      'DESCRIPTION:' + icsEscape(details.join('\n')));
+    if (url) lines.push('URL:' + url, 'LOCATION:' + icsEscape(url));
+    lines.push('BEGIN:VALARM', 'TRIGGER:-PT15M', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape('Скоро урок английского'),
+      'END:VALARM', 'END:VEVENT', 'END:VCALENDAR');
+    return lines.map(foldIcsLine).join('\r\n') + '\r\n';
+  }
+  $('next-lesson-view').addEventListener('click', (e) => {
+    if (!e.target.closest('[data-add-calendar]')) return;
+    const s = selectedStudent();
+    const status = $('calendar-status');
+    try {
+      const content = calendarContent(s, Date.now());
+      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url; anchor.download = 'fastspeak-' + s.nextLesson.date + '.ics';
+      document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      status.textContent = 'Файл .ics подготовлен. Откройте его в календаре. Если Telegram не предлагает сохранить файл, откройте приложение во внешнем браузере.';
+    } catch (error) {
+      status.textContent = 'Не удалось подготовить календарь: ' + error.message;
+    }
+  });
+
   function lessonView(s) {
     if (!s) return '<div class="empty">Выберите ученика для просмотра урока.</div>';
     const poster = videoPreview('lesson');
     const l = s.nextLesson;
     if (!l || !l.date || !l.time) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ждём расписание</h2><p>Дата и ссылка появятся после заполнения карточки ученика администратором.</p></section>';
-    const start = new Date(l.date + 'T' + l.time + ':00+06:00').getTime();
+    const start = lessonStart(l);
     if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ожидаем следующий урок</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
     return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК' + (l.demo ? ' · ДЕМО' : '') + '</p><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
@@ -435,6 +514,7 @@
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet · демо ↗' : 'Подключиться к уроку ↗') + '</a>' :
         '<button class="btn" type="button" disabled>Ссылка пока не добавлена</button>') +
+      '<button type="button" class="att-btn calendar-button" data-add-calendar>Добавить урок в календарь</button><p id="calendar-status" role="status" class="summary"></p>' +
       (l.demo ? '<p class="summary">Учебный пример: открывает главную Google Meet, не реальное занятие.</p>' : '') + '</section>';
   }
   function homeworkView(s) {
@@ -451,11 +531,30 @@
           (h.savedAt ? 'Ответ сохранён локально. Не отправлен преподавателю.' : '') + '</p></form></article>';
       }).join('') : '<div class="empty">Пока нет заданий. Они появятся после добавления администратором.</div>') + '</section>';
   }
+  function estimateView(s) {
+    const plan = s.levelEstimate;
+    const levels = (window.SCHOOL_CONFIG || {}).levels || [];
+    const history = (s.levels || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+    const currentLevel = history.length ? history[history.length - 1].level : '';
+    const valid = plan && levels.includes(plan.targetLevel) &&
+      (levels.indexOf(currentLevel) < 0 || levels.indexOf(plan.targetLevel) > levels.indexOf(currentLevel)) &&
+      Number.isInteger(plan.remainingLessons) && plan.remainingLessons > 0 &&
+      Number.isInteger(plan.sessionsPerWeek) && plan.sessionsPerWeek > 0 &&
+      plan.assessedBy && /^\d{4}-\d{2}-\d{2}$/.test(plan.assessedAt || '');
+    if (!valid) return '<section class="level-estimate"><h3>До следующего уровня</h3><p class="summary">Срок пока не оценён. Преподаватель сможет указать ориентир после оценки уровня.</p></section>';
+    const weeks = Math.ceil(plan.remainingLessons / plan.sessionsPerWeek);
+    const months = Math.max(0.5, Math.round(weeks / 4.345 * 2) / 2);
+    const period = weeks < 4 ? weeks + ' нед.' : new Intl.NumberFormat('ru-RU').format(months) + ' мес.';
+    return '<section class="level-estimate"><p class="eyebrow">ОРИЕНТИР, НЕ ОБЕЩАНИЕ</p><h3>До ' + esc(plan.targetLevel) +
+      ' — примерно ' + period + '</h3><p>При ' + plan.sessionsPerWeek + ' занятиях в неделю.</p><p class="summary">Основание: оценка на ' +
+      esc(formatDate(plan.assessedAt)) + ' — около ' + plan.remainingLessons + ' занятий до следующего уровня. Преподаватель: ' +
+      esc(plan.assessedBy) + '.</p><p class="summary">Срок зависит от регулярности, самостоятельной практики и результатов проверки уровня. Это оценка на указанную дату, а не обратный отсчёт.</p></section>';
+  }
   function progressView(s) {
     if (!s) return '';
     return '<section class="progress-focus"><h2>Ваш следующий шаг</h2><h3>Комментарий преподавателя</h3><p>' +
       esc(s.teacherComment || 'Комментария пока нет.') + '</p><h3>Следующая цель</h3><p>' +
-      esc(s.nextGoal || 'Определите цель вместе с преподавателем.') + '</p></section>';
+      esc(s.nextGoal || 'Определите цель вместе с преподавателем.') + '</p>' + estimateView(s) + '</section>';
   }
   function adminEditor() {
     const detail = $('student-detail').querySelector('.detail');
@@ -463,13 +562,29 @@
     const s = state().students.find((x) => x.id === adminStudentId);
     if (!s) return;
     const l = s.nextLesson || {};
+    const estimate = s.levelEstimate || {};
+    const levels = (window.SCHOOL_CONFIG || {}).levels || [];
+    const tariffOptions = confirmedPrices().map((p) => '<option value="' + esc(p.id) + '"' +
+      (s.package && s.package.priceId === p.id ? ' selected' : '') + '>' + esc(p.label || p.id) + ' · ' + p.lessons + ' занятий</option>').join('');
     detail.insertAdjacentHTML('beforeend', '<form id="learning-admin-form" class="flow-form"><h3>Ближайший онлайн-урок</h3>' +
       '<label>Дата<input name="date" type="date" value="' + esc(l.date || '') + '"></label><label>Время по Астане (UTC+5)<input name="time" type="time" value="' + esc(l.time || '') + '"></label>' +
+      '<label>Продолжительность, минут (если известна)<input name="duration" type="number" min="15" max="240" step="1" value="' + esc(l.durationMinutes || '') + '"></label>' +
       '<label>Название урока<input name="title" maxlength="120" value="' + esc(l.title || '') + '"></label><label>Преподаватель<input name="teacher" maxlength="120" value="' + esc(l.teacher || '') + '"></label>' +
       '<label>Ссылка на Zoom или Meet (HTTPS)<input name="url" type="url" placeholder="https://meet.google.com/…" value="' + esc(l.url || '') + '"></label>' +
       '<label>Комментарий преподавателя<textarea name="comment" maxlength="2000" rows="3">' + esc(s.teacherComment || '') + '</textarea></label>' +
       '<label>Следующая цель<textarea name="goal" maxlength="1000" rows="2">' + esc(s.nextGoal || '') + '</textarea></label>' +
       '<button class="btn" type="submit">Сохранить урок и прогресс</button></form><p id="learning-admin-status" role="status" class="summary"></p>' +
+      '<form id="motivation-admin-form" class="flow-form"><h3>Прайс и ориентир уровня</h3>' +
+      (tariffOptions ? '<label>Тариф из подтверждённого прайса<select name="priceId"><option value="">Цена не выбрана</option>' + tariffOptions + '</select></label>' :
+        '<p class="summary">Подтверждённый прайс школы пока не добавлен. Цены ученику не показываются.</p>') +
+      '<p class="summary">Срок заполняется по оценке преподавателя. Оставьте целевой уровень пустым, чтобы скрыть ориентир.</p>' +
+      '<label>Следующий уровень<select name="targetLevel"><option value="">Без оценки срока</option>' +
+      levels.map((level) => '<option' + (estimate.targetLevel === level ? ' selected' : '') + '>' + esc(level) + '</option>').join('') + '</select></label>' +
+      '<label>Занятий до уровня по оценке преподавателя<input name="remainingLessons" type="number" min="1" max="500" step="1" value="' + esc(estimate.remainingLessons || '') + '"></label>' +
+      '<label>План занятий в неделю<input name="sessionsPerWeek" type="number" min="1" max="7" step="1" value="' + esc(estimate.sessionsPerWeek || '') + '"></label>' +
+      '<label>Кто оценил<input name="assessedBy" maxlength="120" value="' + esc(estimate.assessedBy || '') + '"></label>' +
+      '<label>Дата оценки<input name="assessedAt" type="date" value="' + esc(estimate.assessedAt || '') + '"></label>' +
+      '<button class="btn" type="submit">Сохранить тариф и ориентир</button></form><p id="motivation-admin-status" role="status" class="summary"></p>' +
       '<form id="homework-admin-form" class="flow-form"><h3>Новое домашнее задание</h3><label>Задание<textarea name="task" required maxlength="2000" rows="3"></textarea></label>' +
       '<label>Срок<input name="due" type="date" required></label><label>Ссылка на материалы (HTTPS)<input name="materials" type="url" placeholder="https://…"></label>' +
       '<button class="btn" type="submit">Добавить задание</button></form><p id="homework-admin-status" role="status" class="summary"></p>' +
@@ -488,15 +603,44 @@
     const values = new FormData(e.target);
     if (e.target.id === 'learning-admin-form') {
       const date = values.get('date'), time = values.get('time'), url = values.get('url').trim();
+      const durationRaw = values.get('duration');
+      const duration = durationRaw ? Number(durationRaw) : null;
+      if (durationRaw && (!Number.isInteger(duration) || duration < 15 || duration > 240)) {
+        $('learning-admin-status').textContent = 'Продолжительность: целое число от 15 до 240 минут.'; return;
+      }
       if (!!date !== !!time || (url && (!date || !validUrl(url)))) {
         $('learning-admin-status').textContent = 'Заполните дату и время вместе. Ссылка должна начинаться с https://.'; return;
       }
       const old = s.nextLesson;
-      s.nextLesson = date ? { date, time, title: values.get('title').trim(), teacher: values.get('teacher').trim(), url,
+      s.nextLesson = date ? { date, time, durationMinutes: duration, title: values.get('title').trim(), teacher: values.get('teacher').trim(), url,
         demo: !!(old && old.demo && url === old.url) } : null;
       s.teacherComment = values.get('comment').trim(); s.nextGoal = values.get('goal').trim();
       const ok = persist(); window.schoolRender();
       $('learning-admin-status').textContent = ok ? 'Урок и прогресс сохранены в этом браузере.' : 'Не удалось сохранить в браузере.';
+    } else if (e.target.id === 'motivation-admin-form') {
+      const targetLevel = values.get('targetLevel');
+      const remainingLessons = Number(values.get('remainingLessons'));
+      const sessionsPerWeek = Number(values.get('sessionsPerWeek'));
+      const assessedAt = values.get('assessedAt'), assessedBy = (values.get('assessedBy') || '').trim();
+      const history = (s.levels || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const currentLevel = history.length ? history[history.length - 1].level : '';
+      const levels = (window.SCHOOL_CONFIG || {}).levels || [];
+      if (targetLevel && (!levels.includes(targetLevel) ||
+        (levels.indexOf(currentLevel) >= 0 && levels.indexOf(targetLevel) <= levels.indexOf(currentLevel)) ||
+        !Number.isInteger(remainingLessons) || remainingLessons < 1 || remainingLessons > 500 ||
+        !Number.isInteger(sessionsPerWeek) || sessionsPerWeek < 1 || sessionsPerWeek > 7 ||
+        !assessedBy || !assessedAt || assessedAt > dateISO(new Date()))) {
+        $('motivation-admin-status').textContent = 'Выберите уровень выше текущего, число занятий (1–500), план в неделю (1–7), преподавателя и дату оценки не в будущем.'; return;
+      }
+      const priceId = values.get('priceId');
+      const price = confirmedPrices().find((p) => p.id === priceId);
+      if (priceId && (!price || !s.package || price.lessons !== s.package.total)) {
+        $('motivation-admin-status').textContent = 'Число занятий тарифа должно совпадать с числом занятий в пакете ученика.'; return;
+      }
+      if (s.package && priceId !== null) s.package.priceId = priceId;
+      s.levelEstimate = targetLevel ? { targetLevel, remainingLessons, sessionsPerWeek, assessedAt, assessedBy } : null;
+      const ok = persist(); window.schoolRender();
+      $('motivation-admin-status').textContent = ok ? 'Тариф и ориентир сохранены в этом браузере.' : 'Не удалось сохранить в браузере.';
     } else if (e.target.id === 'homework-admin-form') {
       const materials = values.get('materials').trim(), title = values.get('task').trim(), due = values.get('due');
       if (!title || !due || (materials && !validUrl(materials))) {
@@ -535,7 +679,7 @@
   window.onSchoolRender = function () {
     if (previousRender) previousRender();
     const s = selectedStudent();
-    $('next-lesson-view').innerHTML = lessonView(s);
+    $('next-lesson-view').innerHTML = lessonView(s) + packageView(s);
     $('homework-view').innerHTML = homeworkView(s);
     $('learning-progress').innerHTML = progressView(s);
     showSection(section);
