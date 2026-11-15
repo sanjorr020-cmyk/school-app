@@ -25,8 +25,10 @@ function load() {
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
   } catch (e) {
     console.warn('Не удалось сохранить данные', e);
+    return false;
   }
 }
 
@@ -84,7 +86,7 @@ function fillSelect(sel, options, { placeholder } = {}) {
   if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
 }
 
-const classOptions = () => CLASSES.map((c) => ({ value: c, label: c }));
+const classOptions = () => [...new Set([...CLASSES, ...state.students.map((s) => s.class)])].map((c) => ({ value: c, label: c }));
 const studentLabel = (s) => `${s.name} (${s.class})`;
 
 function studentsOf(cls) {
@@ -107,11 +109,11 @@ document.querySelectorAll('.tab').forEach((btn) => {
 // ---------- Ученики ----------
 function renderStudentSelects() {
   fillSelect($('student-class'), classOptions());
-  fillSelect($('grades-class-filter'), [{ value: '', label: 'Все классы' }, ...classOptions()]);
-  fillSelect($('att-class-filter'), [{ value: '', label: 'Все классы' }, ...classOptions()]);
+  fillSelect($('grades-class-filter'), [{ value: '', label: 'Все группы' }, ...classOptions()]);
+  fillSelect($('att-class-filter'), [{ value: '', label: 'Все группы' }, ...classOptions()]);
   fillSelect($('sch-class-view'), classOptions());
   fillSelect($('lesson-class'), classOptions());
-  fillSelect($('rep-class'), [{ value: '', label: 'Все классы' }, ...classOptions()]);
+  fillSelect($('rep-class'), [{ value: '', label: 'Все группы' }, ...classOptions()]);
   fillSelect($('msg-class'), classOptions());
   fillSelect($('lead-class'), classOptions());
   fillSelect($('grade-student'),
@@ -119,6 +121,7 @@ function renderStudentSelects() {
     { placeholder: 'Выберите ученика' });
   fillSelect($('parent-student'),
     studentsOf('').map((s) => ({ value: s.id, label: studentLabel(s) })));
+  if (window.schoolDemoStudentId) $('parent-student').value = window.schoolDemoStudentId;
 }
 
 function renderStudents() {
@@ -132,7 +135,7 @@ function renderStudents() {
   box.innerHTML = Object.keys(byClass)
     .sort((a, b) => CLASSES.indexOf(a) - CLASSES.indexOf(b))
     .map((cls) => `
-      <h3>Класс ${esc(cls)} (${byClass[cls].length})</h3>
+      <h3>Группа ${esc(cls)} (${byClass[cls].length})</h3>
       ${studentsOf(cls).map((s) => `
         <div class="card">
           <div>${esc(s.name)}</div>
@@ -148,7 +151,7 @@ $('student-form').addEventListener('submit', (e) => {
   const cls = $('student-class').value;
   if (!name || !cls) return;
   if (state.students.some((s) => s.name === name && s.class === cls)) {
-    alert('Такой ученик уже есть в этом классе');
+    alert('Такой ученик уже есть в этой группе');
     return;
   }
   state.students.push({ id: newId(), name, class: cls });
@@ -175,7 +178,7 @@ function renderSchedule() {
   const lessons = state.schedule.filter((l) => l.class === cls);
   const box = $('schedule-view');
   if (!lessons.length) {
-    box.innerHTML = `<div class="empty">Для класса ${esc(cls)} расписание ещё не заполнено.</div>`;
+    box.innerHTML = `<div class="empty">Для группы ${esc(cls)} расписание ещё не заполнено.</div>`;
     return;
   }
   box.innerHTML = [1, 2, 3, 4, 5].map((wd) => {
@@ -234,7 +237,7 @@ function renderReplacements() {
   box.innerHTML = list.map((r) => `
     <div class="card repl">
       <div>
-        <b>${fmtDate(r.date)}</b>, ${esc(r.class || 'все классы')}${r.time ? ', ' + esc(r.time) : ''}
+        <b>${fmtDate(r.date)}</b>, ${esc(r.class || 'все группы')}${r.time ? ', ' + esc(r.time) : ''}
         <div class="meta">${esc(r.text)}</div>
       </div>
       <button class="att-btn" data-del-repl="${r.id}">Удалить</button>
@@ -518,8 +521,8 @@ function renderParent() {
     ${msgsHtml}`;
 }
 
-$('parent-student').addEventListener('change', renderParent);
-$('parent-date').addEventListener('change', renderParent);
+$('parent-student').addEventListener('change', renderAll);
+$('parent-date').addEventListener('change', renderAll);
 
 // ---------- Демо‑данные ----------
 function seedDemo() {
@@ -622,3 +625,4 @@ applyBranding();
 applyTelegramTheme();
 seedDemo();
 renderAll();
+
