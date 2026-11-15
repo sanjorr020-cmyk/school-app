@@ -251,3 +251,8 @@ body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-s
 .demo-creds[hidden] { display: none; }
 .demo-creds label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
 .demo-creds input { padding: 10px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; }
+
+/* Статичные превью учебных видео. */
+.video-preview { margin:0 0 20px; position:relative; overflow:hidden; border-radius:11px; background:#071e60; border:1px solid var(--border); }
+.video-preview img { display:block; width:100%; height:auto; aspect-ratio:1672 / 941; object-fit:cover; }
+.video-preview figcaption { padding:8px 12px; color:var(--muted); font-size:11px; line-height:1.4; }
