@@ -413,14 +413,24 @@
   function selectedStudent() {
     return state().students.find((s) => s.id === (role === 'student' ? studentId : $('parent-student').value));
   }
+  function videoPreview(kind) {
+    const previews = {
+      lesson: ['lesson-preview', 'Стоп-кадр разговора с преподавателем'],
+      board: ['board-preview', 'Стоп-кадр объяснения английского у доски'],
+      homework: ['homework-preview', 'Стоп-кадр разбора задания в тетради']
+    };
+    const item = previews[kind] || previews.lesson;
+    return '<figure class="video-preview"><img src="assets/' + item[0] + '.svg" width="1672" height="941" alt="' + item[1] + ', символ паузы по центру" loading="lazy"><figcaption>Превью · сгенерированный кадр</figcaption></figure>';
+  }
   function lessonView(s) {
     if (!s) return '<div class="empty">Выберите ученика для просмотра урока.</div>';
+    const poster = videoPreview('lesson');
     const l = s.nextLesson;
-    if (!l || !l.date || !l.time) return '<section class="lesson-focus"><p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ждём расписание</h2><p>Дата и ссылка появятся после заполнения карточки ученика администратором.</p></section>';
+    if (!l || !l.date || !l.time) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ждём расписание</h2><p>Дата и ссылка появятся после заполнения карточки ученика администратором.</p></section>';
     const start = new Date(l.date + 'T' + l.time + ':00+06:00').getTime();
-    if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus"><p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ожидаем следующий урок</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
+    if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ожидаем следующий урок</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
-    return '<section class="lesson-focus"><p class="eyebrow">БЛИЖАЙШИЙ УРОК' + (l.demo ? ' · ДЕМО' : '') + '</p><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
+    return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК' + (l.demo ? ' · ДЕМО' : '') + '</p><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
       '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet · демо ↗' : 'Подключиться к уроку ↗') + '</a>' :
@@ -431,9 +441,9 @@
     if (!s) return '';
     const tasks = s.homework || [];
     return '<section class="homework-section"><h2>Домашнее задание</h2><p class="summary">Ответ сохраняется только в этом браузере. Преподавателю он не отправляется.</p>' +
-      (tasks.length ? tasks.map((h) => {
+      (tasks.length ? tasks.map((h, index) => {
         const url = validUrl(h.materials);
-        return '<article class="homework-card"><h3>' + esc(h.title) + '</h3><p class="meta">Срок: ' + esc(formatDate(h.due)) +
+        return '<article class="homework-card">' + videoPreview(index % 2 ? 'board' : 'homework') + '<h3>' + esc(h.title) + '</h3><p class="meta">Срок: ' + esc(formatDate(h.due)) +
           (h.due < dateISO(new Date()) && !h.answer ? ' · Срок прошёл' : '') + '</p>' +
           (url ? '<a data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Материалы задания ↗</a>' : '') +
           '<form class="homework-answer flow-form" data-homework-id="' + esc(h.id) + '"><label>Ваш ответ<textarea name="answer" required maxlength="8000" rows="4">' + esc(h.answer || '') + '</textarea></label>' +
