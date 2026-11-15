@@ -234,3 +234,15 @@ body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-s
  .demo-login { padding-top:35px; }
 }
 
+
+/* Экран входа: короткий, без слогана и заголовка-плаката */
+.demo-login { padding-top: 40px; }
+.entry-title { font-size: 26px; font-weight: 800; margin: 18px 0 6px; color: var(--text); }
+.entry-sub { color: var(--muted); margin: 0 0 18px; }
+.entry-roles { display: grid; gap: 10px; }
+.entry-role { text-align: left; padding: 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; font: inherit; }
+.entry-role b { display: block; font-size: 17px; }
+.entry-role span { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.entry-form { margin-top: 16px; }
+.entry-form .btn { display: none; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

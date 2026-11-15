@@ -350,6 +350,11 @@
     window.scrollTo(0, 0);
   }
   $('demo-role').addEventListener('change', fillEntry);
+  document.querySelectorAll('[data-demo-pick]').forEach((btn) => btn.addEventListener('click', () => {
+    $('demo-role').value = btn.dataset.demoPick;
+    fillEntry();
+    $('demo-entry').requestSubmit();
+  }));
   $('demo-entry').addEventListener('submit', (e) => {
     e.preventDefault(); enter($('demo-role').value, $('demo-student').value);
   });
