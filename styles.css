@@ -386,3 +386,9 @@ body { background:#f7f4ee; }
 .summary-arrow { display:none; }
 .lesson-focus { border-left-width:1px; border-left-color:var(--border); }
 .hero-art { box-shadow:none; border-radius:12px; }
+
+/* Без пилюль, полосок и лишнего серого */
+.lesson-chip { background:none; color:var(--accent); padding:0; border-radius:0; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.student-nav .nav-dot { background:none; color:var(--text); padding:0; border-radius:0; font-weight:700; }
+.lesson-focus { border-left:1px solid var(--border); box-shadow:none; }
+:root { --muted:#3c4660; }

@@ -588,7 +588,7 @@
           (url ? '<a data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Материалы задания</a>' : '') +
           '<form class="homework-answer flow-form" data-homework-id="' + esc(h.id) + '"><label>Ваш ответ<textarea name="answer" required maxlength="8000" rows="4">' + esc(h.answer || '') + '</textarea></label>' +
           '<button class="btn" type="submit">Сохранить ответ</button><p class="summary answer-status" role="status">' +
-          (h.savedAt ? 'Ответ сохранён локально. Не отправлен преподавателю.' : '') + '</p></form></article>';
+          (h.savedAt ? 'Ответ сохранён. Преподаватель его пока не видит.' : '') + '</p></form></article>';
       }).join('') : '<div class="empty">Пока нет заданий. Они появятся после добавления администратором.</div>') + '</section>';
   }
   function estimateView(s) {
@@ -701,7 +701,7 @@
       '<label>Срок<input name="due" type="date" required></label><label>Ссылка на материалы (HTTPS)<input name="materials" type="url" placeholder="https://…"></label>' +
       '<button class="btn" type="submit">Добавить задание</button></form><p id="homework-admin-status" role="status" class="summary"></p>' +
       '<div class="admin-homework-list">' + (s.homework || []).map((h) => '<article class="homework-card"><b>' + esc(h.title) + '</b><p class="meta">' + esc(formatDate(h.due)) +
-        '</p><p class="answer-copy">' + esc(h.answer || 'Ответа в этом браузере пока нет.') + '</p><button class="att-btn" type="button" data-delete-homework="' + esc(h.id) + '">Удалить задание</button></article>').join('') + '</div>');
+        '</p><p class="answer-copy">' + esc(h.answer || 'Ответа пока нет.') + '</p><button class="att-btn" type="button" data-delete-homework="' + esc(h.id) + '">Удалить задание</button></article>').join('') + '</div>');
   }
   let adminStudentId = null;
 
@@ -731,7 +731,7 @@
       if (values.has('comment')) s.teacherComment = values.get('comment').trim();
       if (values.has('goal')) s.nextGoal = values.get('goal').trim();
       const ok = persist(); window.schoolRender();
-      $('learning-admin-status').textContent = ok ? 'Урок и прогресс сохранены в этом браузере.' : 'Не удалось сохранить в браузере.';
+      $('learning-admin-status').textContent = ok ? 'Урок и прогресс сохранены.' : 'Не удалось сохранить в браузере.';
     } else if (e.target.id === 'progress-admin-form') {
       s.teacherComment = String(values.get('comment') || '').trim();
       s.nextGoal = String(values.get('goal') || '').trim();
@@ -760,7 +760,7 @@
       if (s.package && priceId !== null) s.package.priceId = priceId;
       s.levelEstimate = targetLevel ? { targetLevel, remainingLessons, sessionsPerWeek, assessedAt, assessedBy } : null;
       const ok = persist(); window.schoolRender();
-      $('motivation-admin-status').textContent = ok ? 'Тариф и ориентир сохранены в этом браузере.' : 'Не удалось сохранить в браузере.';
+      $('motivation-admin-status').textContent = ok ? 'Тариф и ориентир сохранены.' : 'Не удалось сохранить в браузере.';
     } else if (e.target.id === 'homework-admin-form') {
       const materials = values.get('materials').trim(), title = values.get('task').trim(), due = values.get('due');
       if (!title || !due || (materials && !validUrl(materials))) {
@@ -768,7 +768,7 @@
       }
       (s.homework ||= []).push({ id: uid(), title, due, materials });
       const ok = persist(); window.schoolRender();
-      $('homework-admin-status').textContent = ok ? 'Задание добавлено в этом браузере.' : 'Не удалось сохранить в браузере.';
+      $('homework-admin-status').textContent = ok ? 'Задание добавлено.' : 'Не удалось сохранить в браузере.';
     }
   });
   $('student-detail').addEventListener('click', (e) => {
@@ -788,7 +788,7 @@
     if (!h || !answer) return;
     h.answer = answer; h.savedAt = new Date().toISOString();
     const ok = persist();
-    form.querySelector('.answer-status').textContent = ok ? 'Ответ сохранён локально. Не отправлен преподавателю.' : 'Не удалось сохранить ответ в браузере.';
+    form.querySelector('.answer-status').textContent = ok ? 'Ответ сохранён. Преподаватель его пока не видит.' : 'Не удалось сохранить ответ в браузере.';
   });
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-external-link]');
