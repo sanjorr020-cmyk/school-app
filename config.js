@@ -8,6 +8,9 @@ window.SCHOOL_CONFIG = {
   accent: '#ff5135',
   // Занятий в пакете (абонементе) по умолчанию и варианты уровней и мест занятий.
   packageSize: 12,
+  // Только подтверждённые школой тарифы. Без подтверждения список оставляем пустым.
+  // Поля тарифа: id, label, lessons, totalPriceKzt, source, confirmed (true после подтверждения).
+  priceList: [],
   levels: ['Beginner', 'Elementary', 'Pre-Intermediate', 'Intermediate', 'Upper-Intermediate', 'Advanced'],
   places: ['Филиал 1', 'Филиал 2', 'Онлайн'],
   // Адрес сервера бота (HTTPS), например https://bot.example.com. Пусто — уведомления и заявки выключены.
