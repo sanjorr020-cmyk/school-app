@@ -7,9 +7,24 @@
   <meta name="description" content="Telegram Mini App онлайн-школы FastSpeak: занятия, расписание, прогресс и сообщения." />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <section id="cabinet" class="cabinet-shell" aria-label="Личный кабинет школы">
-  <div class="app-banner"><span class="app-kicker">ОНЛАЙН-ШКОЛА</span><span class="app-status">Личный кабинет</span></div>
+<body data-demo-role="none">
+
+  <main id="demo-login" class="demo-login">
+    <div class="brand-name">FASTSPEAK</div><p class="eyebrow">МЫ ВЫВОДИМ В РЕЧЬ</p>
+    <h1 class="app-title">Ваше обучение.<br>Ваш следующий шаг.</h1>
+    <p>Выберите вид кабинета для знакомства с приложением.</p>
+    <form id="demo-entry" class="flow-form">
+      <label>Вид кабинета<select id="demo-role"><option value="student">Ученик</option><option value="admin">Администратор</option></select></label>
+      <label id="demo-student-label">Ученик<select id="demo-student"></select></label>
+      <button class="btn" type="submit">Открыть кабинет</button>
+    </form>
+    <button id="load-learning-demo" class="att-btn" type="button">Загрузить учебный пример</button>
+    <p id="demo-entry-status" role="status" class="summary"></p>
+    <p class="demo-notice">Демо: выбор вида не защищает данные. Всё хранится только в этом браузере. Вход через Telegram не подключён.</p>
+  </main>
+
+  <section id="cabinet" hidden class="cabinet-shell" aria-label="Личный кабинет школы">
+  <div class="app-banner"><span class="app-kicker">ОНЛАЙН-ШКОЛА</span><button type="button" class="att-btn" id="change-demo-role">Сменить вид</button></div>
   <header class="topbar">
     <div class="brand">
       <div>
@@ -17,7 +32,7 @@
         <div class="brand-sub" id="brand-sub">Расписание, оценки и сообщения для родителей</div>
       </div>
     </div>
-    <nav class="tabs" id="tabs">
+    <nav class="tabs" id="tabs" aria-label="Разделы администратора">
       <button class="tab" data-tab="students">Ученики</button>
       <button class="tab" data-tab="schedule">Расписание</button>
       <button class="tab" data-tab="grades">Оценки</button>
@@ -25,8 +40,13 @@
       <button class="tab" data-tab="leads">Заявки</button>
       <button class="tab active" data-tab="parent">Моё обучение</button>
     </nav>
+    <nav id="student-nav" class="student-nav" aria-label="Разделы ученика" hidden>
+      <button type="button" class="active" data-learning-section="lesson">Урок</button>
+      <button type="button" data-learning-section="homework">Домашка</button>
+      <button type="button" data-learning-section="progress">Прогресс</button>
+    </nav>
   </header>
-  <p class="demo-notice">Демо-режим · Данные в этом браузере · Вход и роли ещё не подключены</p>
+  <p class="demo-notice"><span id="demo-current-role"></span> · Данные только в этом браузере · Без защиты доступа</p>
 
   <main class="wrap">
     <!-- Ученики -->
@@ -50,7 +70,7 @@
       </div>
       <p id="api-status" class="summary"></p>
       <div class="row filter">
-        <label>Класс:
+        <label>Группа:
           <select id="sch-class-view"></select>
         </label>
       </div>
@@ -67,7 +87,7 @@
           <option value="5">Пятница</option>
         </select>
         <input id="lesson-time" type="time" required />
-        <input id="lesson-subject" type="text" placeholder="Предмет" required />
+        <input id="lesson-subject" type="text" placeholder="Курс" required />
         <input id="lesson-teacher" type="text" placeholder="Учитель" />
         <input id="lesson-room" type="text" placeholder="Кабинет" />
         <button type="submit" class="btn">Добавить</button>
@@ -83,10 +103,10 @@
       </form>
       <div id="replacements-list"></div>
 
-      <h3>Сообщения классу</h3>
+      <h3>Сообщения группе</h3>
       <form id="msg-form" class="row">
         <select id="msg-class" required></select>
-        <input id="msg-text" type="text" placeholder="Текст для родителей класса" required />
+        <input id="msg-text" type="text" placeholder="Текст для родителей группы" required />
         <button type="submit" class="btn">Отправить</button>
       </form>
       <div id="messages-list"></div>
@@ -97,7 +117,7 @@
       <h2>Журнал оценок</h2>
       <form id="grade-form" class="row">
         <select id="grade-student" required></select>
-        <input id="grade-subject" type="text" placeholder="Предмет, например: Математика" required />
+        <input id="grade-subject" type="text" placeholder="Курс, например: Разговорный английский" required />
         <select id="grade-value" required>
           <option value="5">5</option>
           <option value="4">4</option>
@@ -108,7 +128,7 @@
         <button type="submit" class="btn">Поставить</button>
       </form>
       <div class="row filter">
-        <label>Класс:
+        <label>Группа:
           <select id="grades-class-filter"></select>
         </label>
       </div>
@@ -120,7 +140,7 @@
       <h2>Посещаемость</h2>
       <div class="row filter">
         <label>Дата: <input id="att-date" type="date" /></label>
-        <label>Класс:
+        <label>Группа:
           <select id="att-class-filter"></select>
         </label>
       </div>
@@ -130,7 +150,7 @@
     <!-- Заявки -->
     <section id="tab-leads" class="panel">
       <h2>Заявки</h2>
-      <p class="summary">Заявки, которые администратор заносит вручную: из звонков, визитов и соцсетей. Заявки из кабинета и бота приходят в Telegram администратора. Контакты хранятся только в этом браузере.</p>
+      <p class="summary">Заявки, которые администратор заносит вручную: из звонков, визитов и соцсетей. Доставка заявок из кабинета в Telegram работает только при подключённом сервере. Контакты хранятся только в этом браузере.</p>
       <form id="pipe-form" class="row">
         <input id="pipe-name" type="text" placeholder="Имя ученика или родителя" required />
         <input id="pipe-contact" type="text" placeholder="Контакт (необязательно)" />
@@ -149,7 +169,7 @@
 
     <!-- Кабинет родителя -->
     <section id="tab-parent" class="panel active">
-      <p class="eyebrow">МЫ ВЫВОДИМ В РЕЧЬ</p><h1 class="app-title">Моё обучение</h1><p class="summary">Расписание, занятия и прогресс — всегда под рукой.</p><div id="learning-overview" class="learning-overview"></div>
+      <p class="eyebrow">МЫ ВЫВОДИМ В РЕЧЬ</p><h1 class="app-title">Моё обучение</h1><p class="summary">Расписание, занятия и прогресс — всегда под рукой.</p><div id="next-lesson-view"></div><div id="homework-view"></div><div id="learning-progress"></div><div id="learning-overview" class="learning-overview"></div>
       <div class="row filter">
         <label>Ученик:
           <select id="parent-student"></select>
@@ -184,3 +204,4 @@
   </script>
 </body>
 </html>
+
