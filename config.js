@@ -5,7 +5,7 @@
 window.SCHOOL_CONFIG = {
   name: 'Кабинет школы (демо)',
   subtitle: 'Расписание, оценки и сообщения для родителей',
-  accent: '#9a3b25',
+  accent: '#5ee0b0',
   // Занятий в пакете (абонементе) по умолчанию и варианты уровней и мест занятий.
   packageSize: 12,
   levels: ['Beginner', 'Elementary', 'Pre-Intermediate', 'Intermediate', 'Upper-Intermediate', 'Advanced'],
