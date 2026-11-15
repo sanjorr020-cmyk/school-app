@@ -120,3 +120,9 @@ tr:last-child td { border-bottom: none; }
   th, td { padding: 7px 6px; font-size: 13px; }
   .att-btn { padding: 4px 6px; font-size: 12px; }
 }
+
+/* Пакеты, уровни, заявки */
+.detail { margin-top: 20px; padding-top: 4px; border-top: 1px solid var(--border); }
+.warn { color: var(--bad); font-weight: 600; margin: 4px 0 8px; }
+.pipe-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pipe-actions select { font: inherit; font-size: 13px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 2px; background: var(--card); color: var(--text); }

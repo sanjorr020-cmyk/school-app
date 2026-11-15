@@ -9,7 +9,7 @@ const WEEKDAY_NAMES = { 1: 'Понедельник', 2: 'Вторник', 3: 'С
 
 // ---------- Хранилище ----------
 function emptyState() {
-  return { students: [], grades: [], attendance: {}, schedule: [], replacements: [], messages: [] };
+  return { students: [], grades: [], attendance: {}, schedule: [], replacements: [], messages: [], leads: [] };
 }
 
 function load() {
@@ -51,6 +51,10 @@ function applyTelegramTheme() {
 }
 
 let state = load();
+// Точки доступа для extras.js (пакеты занятий, уровни, заявки)
+window.schoolState = () => state;
+window.schoolSave = () => save();
+window.schoolRender = () => renderAll();
 let idCounter = Date.now();
 const newId = () => String(idCounter++);
 
@@ -138,6 +142,7 @@ function renderStudents() {
       ${studentsOf(cls).map((s) => `
         <div class="card">
           <div>${esc(s.name)}</div>
+          <button class="att-btn" data-open-student="${s.id}">Подробнее</button>
           <button class="att-btn" data-del-student="${s.id}">Удалить</button>
         </div>`).join('')}
     `).join('');
@@ -518,7 +523,15 @@ $('parent-date').addEventListener('change', renderParent);
 function seedDemo() {
   const demo = CONFIG.demo;
   if (!demo || state.students.length) return;
-  (demo.students || []).forEach((s) => state.students.push({ id: newId(), name: s.name, class: s.class }));
+  (demo.students || []).forEach((s) => state.students.push({
+    id: newId(),
+    name: s.name,
+    class: s.class,
+    place: s.place || '',
+    package: s.place ? { total: CONFIG.packageSize || 12, start: todayISO() } : undefined,
+    levels: (s.levels || []).map((l) => ({ id: newId(), level: l.level, date: l.date })),
+  }));
+  (demo.leads || []).forEach((l) => state.leads.push({ id: newId(), ...l, createdAt: todayISO() }));
   (demo.schedule || []).forEach((l) => state.schedule.push({ id: newId(), ...l }));
   (demo.grades || []).forEach((g) => {
     const st = state.students.find((s) => s.name === g.name);
@@ -597,6 +610,7 @@ function renderAll() {
   renderGrades();
   renderAttendance();
   renderParent();
+  if (window.onSchoolRender) window.onSchoolRender();
 }
 
 $('grade-date').value = todayISO();

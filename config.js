@@ -6,15 +6,19 @@ window.SCHOOL_CONFIG = {
   name: 'Кабинет школы (демо)',
   subtitle: 'Расписание, оценки и сообщения для родителей',
   accent: '#9a3b25',
+  // Занятий в пакете (абонементе) по умолчанию и варианты уровней и мест занятий.
+  packageSize: 12,
+  levels: ['Beginner', 'Elementary', 'Pre-Intermediate', 'Intermediate', 'Upper-Intermediate', 'Advanced'],
+  places: ['Филиал 1', 'Филиал 2', 'Онлайн'],
   // Адрес сервера бота (HTTPS), например https://bot.example.com. Пусто — уведомления и заявки выключены.
   apiUrl: '',
   classes: ['5А', '5Б', '6А', '6Б', '7А', '7Б', '8А', '8Б', '9А', '9Б', '10А', '11А'],
   // Демо‑данные добавляются, только если журнал пустой. Уберите блок demo для чистого старта.
   demo: {
     students: [
-      { name: 'Иванов Иван', class: '7А' },
-      { name: 'Петрова Анна', class: '7А' },
-      { name: 'Сейтжанов Арман', class: '7Б' },
+      { name: 'Иванов Иван', class: '7А', place: 'Филиал 1', levels: [{ level: 'Elementary', date: '2026-06-01' }, { level: 'Intermediate', date: '2026-10-15' }] },
+      { name: 'Петрова Анна', class: '7А', place: 'Онлайн', levels: [{ level: 'Pre-Intermediate', date: '2026-09-01' }] },
+      { name: 'Сейтжанов Арман', class: '7Б', place: 'Филиал 2', levels: [] },
     ],
     // weekday: 1 — понедельник … 5 — пятница
     schedule: [
@@ -33,6 +37,9 @@ window.SCHOOL_CONFIG = {
     ],
     messages: [
       { class: '7А', text: 'Завтра родительское собрание в 18:00, кабинет 101.' },
+    ],
+    leads: [
+      { name: 'Пример заявителя', contact: '', source: 'Сайт', stage: 'new', note: 'Пробное занятие на следующей неделе' },
     ],
   },
 };

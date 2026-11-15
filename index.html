@@ -19,6 +19,7 @@
       <button class="tab" data-tab="schedule">Расписание</button>
       <button class="tab" data-tab="grades">Оценки</button>
       <button class="tab" data-tab="attendance">Посещаемость</button>
+      <button class="tab" data-tab="leads">Заявки</button>
       <button class="tab" data-tab="parent">Кабинет родителя</button>
     </nav>
   </header>
@@ -33,6 +34,7 @@
         <button type="submit" class="btn">Добавить</button>
       </form>
       <div id="students-list"></div>
+      <div id="student-detail"></div>
     </section>
 
     <!-- Расписание и замены -->
@@ -121,6 +123,26 @@
       <div id="attendance-list"></div>
     </section>
 
+    <!-- Заявки -->
+    <section id="tab-leads" class="panel">
+      <h2>Заявки</h2>
+      <p class="summary">Заявки, которые администратор заносит вручную: из звонков, визитов и соцсетей. Заявки из кабинета и бота приходят в Telegram администратора. Контакты хранятся только в этом браузере.</p>
+      <form id="pipe-form" class="row">
+        <input id="pipe-name" type="text" placeholder="Имя ученика или родителя" required />
+        <input id="pipe-contact" type="text" placeholder="Контакт (необязательно)" />
+        <select id="pipe-source">
+          <option>Сайт</option>
+          <option>Telegram</option>
+          <option>Instagram</option>
+          <option>Звонок</option>
+          <option>Визит</option>
+        </select>
+        <input id="pipe-note" type="text" placeholder="Комментарий" />
+        <button type="submit" class="btn">Добавить</button>
+      </form>
+      <div id="pipeline-list"></div>
+    </section>
+
     <!-- Кабинет родителя -->
     <section id="tab-parent" class="panel">
       <h2>Кабинет родителя</h2>
@@ -131,6 +153,7 @@
         <label>Дата: <input id="parent-date" type="date" /></label>
       </div>
       <div id="parent-view"></div>
+      <div id="parent-extra"></div>
 
       <h3>Записаться на диагностику</h3>
       <form id="lead-form" class="row">
@@ -146,5 +169,6 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
+  <script src="extras.js"></script>
 </body>
 </html>
