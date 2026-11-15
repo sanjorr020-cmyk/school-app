@@ -413,14 +413,8 @@
   function selectedStudent() {
     return state().students.find((s) => s.id === (role === 'student' ? studentId : $('parent-student').value));
   }
-  function videoPreview(kind) {
-    const previews = {
-      lesson: ['lesson-preview', 'Стоп-кадр разговора с преподавателем'],
-      board: ['board-preview', 'Стоп-кадр объяснения английского у доски'],
-      homework: ['homework-preview', 'Стоп-кадр разбора задания в тетради']
-    };
-    const item = previews[kind] || previews.lesson;
-    return '<figure class="video-preview"><img src="assets/' + item[0] + '.svg" width="1672" height="941" alt="' + item[1] + ', символ паузы по центру" loading="lazy"><figcaption>Превью · сгенерированный кадр</figcaption></figure>';
+  function videoPreview() {
+    return '';
   }
 
   const lessonStart = (lesson) => {
@@ -441,13 +435,11 @@
     const money = (n) => new Intl.NumberFormat('ru-KZ', { maximumFractionDigits: 2 }).format(n) + ' ₸';
     return '<section class="package-focus"><p class="eyebrow">МОЙ ПАКЕТ</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
       '<progress value="' + Math.min(used, pkg.total) + '" max="' + esc(pkg.total) + '" aria-label="Списано занятий в пакете"></progress>' +
-      '<p>Использовано ' + Math.min(used, pkg.total) + ' из ' + esc(pkg.total) + ' занятий.</p>' +
       (used > pkg.total ? '<p class="summary">Отметок сверх пакета: ' + (used - pkg.total) + '.</p>' : '') +
-      '<p class="summary">По текущим правилам демо списываются посещения, опоздания и пропуски с даты начала пакета.</p>' +
       (price ? '<p class="lesson-price">Одно занятие — ' + money(price.totalPriceKzt / price.lessons) +
         '</p><p class="summary">' + esc(price.label || 'Пакет') + ': ' + money(price.totalPriceKzt) + ' за ' + price.lessons +
         ' занятий. Источник прайса: ' + esc(price.source) + '.</p>' :
-        '<p class="summary">Стоимость появится после подтверждения прайса школы и выбора тарифа администратором.</p>') +
+        '') +
       (left <= 2 ? '<p class="package-reminder">Пакет подходит к концу. Обсудите следующие занятия с администратором.</p>' : '') + '</section>';
   }
   const icsEscape = (value) => String(value || '').replace(/\\/g, '\\\\').replace(/\r\n|\n|\r/g, '\\n').replace(/;/g, '\\;').replace(/,/g, '\\,');
@@ -547,11 +539,11 @@
     if (!s) return '<div class="empty">Выберите ученика для просмотра урока.</div>';
     const poster = videoPreview('lesson');
     const l = s.nextLesson;
-    if (!l || !l.date || !l.time) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ждём расписание</h2><p>Дата и ссылка появятся после заполнения карточки ученика администратором.</p></section>';
+    if (!l || !l.date || !l.time) return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ждём расписание</h2><p>Дата и ссылка появятся после заполнения карточки ученика администратором.</p></section>';
     const start = lessonStart(l);
-    if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ожидаем следующий урок</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
+    if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ожидаем</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
-    return '<section class="lesson-focus">' + poster + '<p class="eyebrow">БЛИЖАЙШИЙ УРОК' + (l.demo ? ' · ДЕМО' : '') + '</p><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
+    return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ' + esc(l.title || 'Английский язык') + '</h2>' +
       '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet · демо ↗' : 'Подключиться к уроку ↗') + '</a>' :
@@ -583,7 +575,7 @@
       Number.isInteger(plan.remainingLessons) && plan.remainingLessons > 0 &&
       Number.isInteger(plan.sessionsPerWeek) && plan.sessionsPerWeek > 0 &&
       plan.assessedBy && /^\d{4}-\d{2}-\d{2}$/.test(plan.assessedAt || '');
-    if (!valid) return '<section class="level-estimate"><h3>До следующего уровня</h3><p class="summary">Срок пока не оценён. Преподаватель сможет указать ориентир после оценки уровня.</p></section>';
+    if (!valid) return '';
     const weeks = Math.ceil(plan.remainingLessons / plan.sessionsPerWeek);
     const months = Math.max(0.5, Math.round(weeks / 4.345 * 2) / 2);
     const period = weeks < 4 ? weeks + ' нед.' : new Intl.NumberFormat('ru-RU').format(months) + ' мес.';
@@ -594,9 +586,9 @@
   }
   function progressView(s) {
     if (!s) return '';
-    return '<section class="progress-focus"><h2>Ваш следующий шаг</h2><h3>Комментарий преподавателя</h3><p>' +
-      esc(s.teacherComment || 'Комментария пока нет.') + '</p><h3>Следующая цель</h3><p>' +
-      esc(s.nextGoal || 'Определите цель вместе с преподавателем.') + '</p>' + estimateView(s) + '</section>';
+    return '<section class="progress-focus"><h2>Ваш следующий шаг</h2>' +
+      (s.teacherComment ? '<h3>Комментарий преподавателя</h3><p>' + esc(s.teacherComment) + '</p>' : '') +
+      (s.nextGoal ? '<h3>Следующая цель</h3><p>' + esc(s.nextGoal) + '</p>' : '') + estimateView(s) + '</section>';
   }
   $('student-detail').addEventListener('submit', (e) => {
     if (e.target.id !== 'lesson-queue-form') return;
