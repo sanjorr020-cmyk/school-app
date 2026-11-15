@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FASTSPEAK — Личный кабинет</title>
   <meta name="description" content="Telegram Mini App онлайн-школы FastSpeak: занятия, расписание, прогресс и сообщения." />
-  <link rel="stylesheet" href="styles.css?v=20261115-ui" />
+  <link rel="stylesheet" href="styles.css?v=20261115-workspace" />
 </head>
 <body data-demo-role="none">
 
@@ -46,8 +46,8 @@
       <button class="tab active" data-tab="parent">Вид ученика</button>
     </nav>
     <nav id="student-nav" class="student-nav" aria-label="Разделы ученика" hidden>
-      <button type="button" class="active" data-learning-section="lesson"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span>Урок</span></button>
-      <button type="button" data-learning-section="homework"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg><span>Домашка</span><span class="nav-dot" id="nav-dot" hidden></span></button>
+      <button type="button" class="active" data-learning-section="lesson"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span>Уроки</span></button>
+      <button type="button" data-learning-section="homework"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg><span>Задания</span><span class="nav-dot" id="nav-dot" hidden></span></button>
       <button type="button" data-learning-section="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V12M10 20V6M16 20v-9M22 20H2"/></svg><span>Прогресс</span></button>
     </nav>
   </header>
@@ -55,12 +55,14 @@
   <main class="wrap">
     <!-- Ученики -->
     <section id="tab-students" class="panel">
-      <h2>Список учеников</h2>
+      <h2>Ученики</h2>
+      <details class="add-student-disclosure"><summary>Добавить ученика</summary>
       <form id="student-form" class="row">
         <input id="student-name" type="text" placeholder="Фамилия Имя" required />
         <select id="student-class" required></select>
         <button type="submit" class="btn">Добавить</button>
       </form>
+      </details>
       <div id="students-list"></div>
       <div id="student-detail"></div>
     </section>
@@ -197,8 +199,8 @@
   </section>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=20261115-ui"></script>
-  <script src="extras.js?v=20261115-ui"></script>
+  <script src="app.js?v=20261115-workspace"></script>
+  <script src="extras.js?v=20261115-workspace"></script>
   <script>
     document.querySelectorAll('input, select').forEach(function (field) {
       if (!field.labels.length && !field.getAttribute('aria-label')) {
