@@ -63,7 +63,7 @@
     const tabs = [['overview','Обзор'],['lessons','Уроки'],['homework','Задания'],['package','Пакет и уровень']];
     box.innerHTML = '<div class="detail profile-detail">' +
       '<button id="profile-back" type="button" class="back-button">← Все ученики</button>' +
-      '<header class="profile-header"><span class="profile-avatar" aria-hidden="true">' + esc(s.name.slice(0,1)) + '</span><div><h2>' + esc(s.name) + '</h2><p class="meta">' + esc(s.class) + (s.place ? ' · ' + esc(s.place) : '') + '</p></div></header>' +
+      '<header class="profile-header"><span class="profile-avatar" aria-hidden="true">' + esc(s.name.slice(0,1)) + '</span><div><h2>' + esc(s.name) + '</h2><p class="meta">' + esc(s.class) + (s.place ? ', ' + esc(s.place) : '') + '</p></div></header>' +
       '<div class="profile-facts"><div><span>Уровень</span><strong>' + esc(current) + '</strong></div><div><span>Осталось занятий</span><strong>' + (left == null ? 'Нет пакета' : left + ' из ' + s.package.total) + '</strong></div></div>' +
       '<nav class="profile-tabs" role="tablist" aria-label="Карточка ученика">' + tabs.map(([key,label]) =>
         '<button type="button" role="tab" id="profile-tab-' + key + '" aria-controls="profile-panel-' + key + '" aria-selected="' + (detailUI.tab === key) + '" tabindex="' + (detailUI.tab === key ? 0 : -1) + '" data-profile-tab="' + key + '">' + label + '</button>').join('') + '</nav>' +
@@ -77,7 +77,7 @@
         '<label>Дата начала<input id="ex-pkg-start" type="date" value="' + (s.package ? esc(s.package.start) : todayISO()) + '"></label><button type="button" class="btn" id="ex-pkg-save">Сохранить пакет</button></div>' +
         '<p class="summary">По текущим правилам отметки «был», «опоздал» и «не был» с даты начала пакета списывают занятие.</p></details></section>' +
         '<section class="profile-block"><h3>История уровня</h3>' +
-        (levels.length ? levels.map((l) => '<div class="card"><div><b>' + esc(l.level) + '</b><span class="meta"> · ' + fmt(l.date) + '</span></div>' +
+        (levels.length ? levels.map((l) => '<div class="card"><div><b>' + esc(l.level) + '</b><span class="meta">' + fmt(l.date) + '</span></div>' +
           '<button type="button" class="att-btn" data-ex-del-level="' + esc(l.id) + '">Удалить</button></div>').join('') : '<p class="meta">История пока пустая</p>') +
         '<details class="editor-disclosure" data-profile-editor="level"><summary>Добавить уровень</summary><div class="flow-form"><label>Уровень<select id="ex-level">' +
         LEVELS.map((l) => '<option>' + esc(l) + '</option>').join('') + '</select></label><label>Дата оценки<input id="ex-level-date" type="date" value="' + todayISO() + '"></label>' +
@@ -302,7 +302,7 @@
   function fillEntry() {
     const selected = $('demo-student').value;
     $('demo-student').innerHTML = state().students.map((s) =>
-      '<option value="' + esc(s.id) + '">' + esc(s.name) + ' · ' + esc(s.class) + '</option>').join('');
+      '<option value="' + esc(s.id) + '">' + esc(s.name) + ', ' + esc(s.class) + '</option>').join('');
     if (state().students.some((s) => s.id === selected)) $('demo-student').value = selected;
     $('demo-student-label').hidden = $('demo-role').value === 'admin';
   }
@@ -345,7 +345,7 @@
     document.body.dataset.demoRole = role;
     $('demo-login').hidden = true; $('cabinet').hidden = false;
     $('student-nav').hidden = role !== 'student';
-    $('demo-current-role').textContent = role === 'student' ? 'Демо' : 'Администратор · демо';
+    $('demo-current-role').textContent = role === 'student' ? 'Демо' : 'Администратор (демо)';
     if (studentId) $('parent-student').value = studentId;
     activateTab(role === 'student' ? 'parent' : 'students');
     showSection('lesson');
@@ -401,12 +401,12 @@
       const tomorrow = new Date(Date.now() + 86400000);
       const due = new Date(Date.now() + 3 * 86400000);
       sample = {
-        id: uid(), learningDemo: true, name: 'Демо · Алекс', class: 'Speaking A2', place: 'Онлайн',
+        id: uid(), learningDemo: true, name: 'Демо: Алекс', class: 'Speaking A2', place: 'Онлайн',
         package: { total: 12, start: dateISO(new Date()) },
         levels: [{ id: uid(), level: 'Elementary', date: dateISO(new Date()) }],
         teacherComment: 'Демо: уверенно строите простые предложения. Потренируйте вопросы в прошедшем времени.',
         nextGoal: 'Рассказать о своих выходных на английском за одну минуту.',
-        nextLesson: { date: dateISO(tomorrow), time: '18:00', title: 'Speaking practice', teacher: 'Демо · преподаватель',
+        nextLesson: { date: dateISO(tomorrow), time: '18:00', title: 'Speaking practice', teacher: 'Демо, преподаватель',
           url: 'https://meet.google.com/', demo: true },
         homework: [{ id: uid(), title: 'Подготовьте пять предложений о своих выходных. Используйте Past Simple.',
           due: dateISO(due), materials: 'https://learnenglish.britishcouncil.org/grammar' }]
@@ -440,10 +440,10 @@
     const left = Math.max(0, pkg.total - used);
     const price = confirmedPrices().find((p) => p.id === pkg.priceId && p.lessons === pkg.total);
     const money = (n) => new Intl.NumberFormat('ru-KZ', { maximumFractionDigits: 2 }).format(n) + ' ₸';
-    return '<section class="package-focus"><p class="eyebrow">Пакет занятий</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
+    return '<section class="package-focus"><p class="label">Пакет занятий</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
       '<progress value="' + Math.min(used, pkg.total) + '" max="' + esc(pkg.total) + '" aria-label="Списано занятий в пакете"></progress>' +
       (used > pkg.total ? '<p class="summary">Отметок сверх пакета: ' + (used - pkg.total) + '.</p>' : '') +
-      (price ? '<p class="lesson-price">Одно занятие — ' + money(price.totalPriceKzt / price.lessons) +
+      (price ? '<p class="lesson-price">Одно занятие: ' + money(price.totalPriceKzt / price.lessons) +
         '</p><p class="summary">' + esc(price.label || 'Пакет') + ': ' + money(price.totalPriceKzt) + ' за ' + price.lessons +
         ' занятий. Источник прайса: ' + esc(price.source) + '.</p>' :
         '') +
@@ -526,7 +526,7 @@
     clock: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
   };
   function lessonRow(l, label, icon, past) {
-    return '<div class="lesson-row' + (past ? ' is-past' : '') + '"><span class="lesson-date">' + esc(formatDate(l.date)) + (l.time ? ' · ' + esc(l.time) : '') +
+    return '<div class="lesson-row' + (past ? ' is-past' : '') + '"><span class="lesson-date">' + esc(formatDate(l.date)) + (l.time ? ' в ' + esc(l.time) : '') +
       '</span><span class="lesson-title">' + esc(l.title || 'Урок') + '</span><span class="lesson-status">' + LESSON_ICONS[icon] + esc(label) + '</span></div>';
   }
   function lessonRowsView(s) {
@@ -543,17 +543,17 @@
     const msgs = (state().messages || []).filter((m) => m.class === s.class).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     if (!msgs.length) return '';
     return '<section class="class-messages"><h3>Сообщения от школы</h3>' + msgs.map((m) =>
-      '<div class="card"><span>' + esc(formatDate(m.date)) + ' · ' + esc(m.text) + '</span></div>').join('') + '</section>';
+      '<div class="card"><span>' + esc(formatDate(m.date)) + ': ' + esc(m.text) + '</span></div>').join('') + '</section>';
   }
   function lessonQueueBlock(s) {
     const queue = s.lessonQueue || [];
     const done = s.lessonsDone || [];
     return '<section class="lesson-queue"><h3>Очередь уроков</h3>' +
       '<p class="summary">Прошедший урок переходит в «Прошедшие», следующий из очереди становится ближайшим. Урок можно отметить проведённым вручную.</p>' +
-      '<p class="summary">Сейчас: ' + (s.nextLesson ? esc(formatDate(s.nextLesson.date)) + ' · ' + esc(s.nextLesson.time) : 'ближайшего урока нет') +
-      ' · в очереди: ' + queue.length + ' · проведено: ' + done.length + '</p>' +
+      '<p class="summary">Сейчас: ' + (s.nextLesson ? esc(formatDate(s.nextLesson.date)) + ' в ' + esc(s.nextLesson.time) : 'ближайшего урока нет') +
+      '. В очереди: ' + queue.length + '. Проведено: ' + done.length + '</p>' +
       (s.nextLesson ? '<button class="att-btn" type="button" data-mark-lesson-done>Отметить текущий урок проведённым</button>' : '') +
-      queue.map((q) => '<div class="card"><span>' + esc(formatDate(q.date)) + ' · ' + esc(q.time) + ' · ' + esc(q.title || 'Урок') + '</span><button class="att-btn" type="button" data-remove-queued="' + esc(q.id) + '">Убрать</button></div>').join('') +
+      queue.map((q) => '<div class="card"><span>' + esc(formatDate(q.date)) + ' в ' + esc(q.time) + ', ' + esc(q.title || 'Урок') + '</span><button class="att-btn" type="button" data-remove-queued="' + esc(q.id) + '">Убрать</button></div>').join('') +
       '<form id="lesson-queue-form" class="flow-form"><h4>Добавить урок в очередь</h4>' +
       '<label>Дата<input name="date" type="date" required></label><label>Время по Астане (UTC+5)<input name="time" type="time" required></label>' +
       '<label>Название урока<input name="title" maxlength="120"></label><label>Преподаватель<input name="teacher" maxlength="120"></label>' +
@@ -570,7 +570,7 @@
     if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ожидаем</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
     return '<section class="lesson-focus">' + poster + '<span class="lesson-chip">' + (start <= Date.now() ? 'Идёт сейчас' : 'Ближайший') + '</span><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
-      '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
+      '<p class="lesson-when">' + esc(formatDate(l.date)) + ' в ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet' : 'Подключиться к уроку') + '</a>' :
         '<button class="btn" type="button" disabled>Ссылка пока не добавлена</button>') +
@@ -584,7 +584,7 @@
       (tasks.length ? tasks.map((h, index) => {
         const url = validUrl(h.materials);
         return '<article class="homework-card">' + videoPreview(index % 2 ? 'board' : 'homework') + '<h3>' + esc(h.title) + '</h3><p class="meta">Срок: ' + esc(formatDate(h.due)) +
-          (h.due < dateISO(new Date()) && !h.answer ? ' · Срок прошёл' : '') + '</p>' +
+          (h.due < dateISO(new Date()) && !h.answer ? ' (срок прошёл)' : '') + '</p>' +
           (url ? '<a data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Материалы задания</a>' : '') +
           '<form class="homework-answer flow-form" data-homework-id="' + esc(h.id) + '"><label>Ваш ответ<textarea name="answer" required maxlength="8000" rows="4">' + esc(h.answer || '') + '</textarea></label>' +
           '<button class="btn" type="submit">Сохранить ответ</button><p class="summary answer-status" role="status">' +
@@ -605,9 +605,9 @@
     const weeks = Math.ceil(plan.remainingLessons / plan.sessionsPerWeek);
     const months = Math.max(0.5, Math.round(weeks / 4.345 * 2) / 2);
     const period = weeks < 4 ? weeks + ' нед.' : new Intl.NumberFormat('ru-RU').format(months) + ' мес.';
-    return '<section class="level-estimate"><p class="eyebrow">ОРИЕНТИР, НЕ ОБЕЩАНИЕ</p><h3>До ' + esc(plan.targetLevel) +
-      ' — примерно ' + period + '</h3><p>При ' + plan.sessionsPerWeek + ' занятиях в неделю.</p><p class="summary">Основание: оценка на ' +
-      esc(formatDate(plan.assessedAt)) + ' — около ' + plan.remainingLessons + ' занятий до следующего уровня. Преподаватель: ' +
+    return '<section class="level-estimate"><p class="label">Ориентир, не обещание</p><h3>До ' + esc(plan.targetLevel) +
+      ': примерно ' + period + '</h3><p>При ' + plan.sessionsPerWeek + ' занятиях в неделю.</p><p class="summary">Основание: оценка на ' +
+      esc(formatDate(plan.assessedAt)) + ', около ' + plan.remainingLessons + ' занятий до следующего уровня. Преподаватель: ' +
       esc(plan.assessedBy) + '.</p><p class="summary">Срок зависит от регулярности, самостоятельной практики и результатов проверки уровня. Это оценка на указанную дату, а не обратный отсчёт.</p></section>';
   }
   // Программа курса и вопросы-ответы: тексты берутся из config.js (course, faq).
@@ -677,7 +677,7 @@
     const estimate = s.levelEstimate || {};
     const levels = (window.SCHOOL_CONFIG || {}).levels || [];
     const tariffOptions = confirmedPrices().map((p) => '<option value="' + esc(p.id) + '"' +
-      (s.package && s.package.priceId === p.id ? ' selected' : '') + '>' + esc(p.label || p.id) + ' · ' + p.lessons + ' занятий</option>').join('');
+      (s.package && s.package.priceId === p.id ? ' selected' : '') + '>' + esc(p.label || p.id) + ', ' + p.lessons + ' занятий</option>').join('');
     detail.insertAdjacentHTML('beforeend', lessonQueueBlock(s) + '<form id="learning-admin-form" class="flow-form"><h3>Ближайший онлайн-урок</h3>' +
       '<label>Дата<input name="date" type="date" value="' + esc(l.date || '') + '"></label><label>Время по Астане (UTC+5)<input name="time" type="time" value="' + esc(l.time || '') + '"></label>' +
       '<label>Продолжительность, минут (если известна)<input name="duration" type="number" min="15" max="240" step="1" value="' + esc(l.durationMinutes || '') + '"></label>' +
@@ -815,8 +815,8 @@
     const l = s.nextLesson;
     overview.innerHTML = '<section class="profile-block"><h3>Ближайший урок</h3>' +
       (l ? '<p class="overview-lesson-title">' + esc(l.title || 'Английский язык') + '</p><p class="meta">' +
-        esc(formatDate(l.date)) + ' · ' + esc(l.time) + ' · Астана (UTC+5)</p>' : '<p class="meta">Урок пока не назначен</p>') +
-      '<button type="button" class="text-button" data-profile-tab="lessons">Перейти к урокам →</button></section>' +
+        esc(formatDate(l.date)) + ' в ' + esc(l.time) + ', Астана (UTC+5)</p>' : '<p class="meta">Урок пока не назначен</p>') +
+      '<button type="button" class="text-button" data-profile-tab="lessons">Перейти к урокам</button></section>' +
       (s.teacherComment || s.nextGoal || s.levelEstimate ? progressView(s) :
         '<section class="profile-block"><h3>Цель обучения</h3><p class="meta">Цель и комментарий преподавателя ещё не добавлены</p></section>');
     function editor(panel, form, status, title, key) {
@@ -884,9 +884,9 @@
     const history = (s.levels || []).slice().sort((a,b) => a.date.localeCompare(b.date));
     const level = history.length ? history[history.length-1].level : 'Не указан';
     return '<div class="study-summary"><button type="button" data-go-study="homework"><span>Задания</span><strong>' +
-      (pending ? pending + ' без ответа' : 'Нет заданий без ответа') + '</strong><span class="summary-arrow" aria-hidden="true">→</span></button>' +
+      (pending ? pending + ' без ответа' : 'Нет заданий без ответа') + '</strong></button>' +
       '<button type="button" data-go-study="progress"><span>Мой уровень</span><strong>' + esc(level) +
-      '</strong><span class="summary-arrow" aria-hidden="true">→</span></button></div>';
+      '</strong></button></div>';
   }
   document.addEventListener('click',(e) => {
     const btn = e.target.closest('[data-go-study]');

@@ -551,7 +551,7 @@ function applyBranding() {
   if (CONFIG.accent) root.setProperty('--accent', CONFIG.accent);
   if (CONFIG.accent2) root.setProperty('--accent-2', CONFIG.accent2);
   if (CONFIG.name) {
-    document.title = CONFIG.name + ' — Личный кабинет';
+    document.title = CONFIG.name + ': личный кабинет';
     $('brand-name').textContent = CONFIG.name;
   }
   if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
