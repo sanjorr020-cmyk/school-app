@@ -332,6 +332,18 @@
     $('learning-overview').hidden = role === 'student' && name !== 'progress';
     $('parent-extra').hidden = role === 'student' && name !== 'progress';
     $('parent-view').hidden = role === 'student';
+    const titles = { lesson: 'Урок', homework: 'Домашка', progress: 'Прогресс' };
+    $('section-title').textContent = role === 'student' ? (titles[name] || '') : 'Вид ученика';
+    updateNavDot();
+  }
+  // Точка на «Домашке»: есть невыполненное задание со сроком в ближайшие 3 дня.
+  function updateNavDot() {
+    const s = selectedStudent();
+    const today = dateISO(new Date());
+    const soon = new Date(Date.now() + 3 * 86400000);
+    const limit = dateISO(soon);
+    const pending = s && (s.homework || []).some((h) => !h.answer && h.due >= today && h.due <= limit);
+    $('nav-dot').hidden = !pending;
   }
   function enter(nextRole, id) {
     if (nextRole === 'student' && !state().students.some((s) => s.id === id)) {

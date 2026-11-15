@@ -269,3 +269,10 @@ body[data-demo-role="student"] #lead-form,body[data-demo-role="student"] #lead-s
 .level-estimate { border-top:1px solid var(--border); margin-top:24px; padding-top:24px; }
 #motivation-admin-form { border-top:1px solid var(--border); padding-top:20px; }
 @media(max-width:640px) { .package-focus { padding:18px; } }
+
+/* Нижняя навигация ученика: иконка и подпись, точка у домашки */
+.student-nav button { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.student-nav svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.nav-dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); margin-left:4px; vertical-align:middle; }
+.nav-dot[hidden] { display:none; }
+#section-title { margin: 6px 0 14px; }

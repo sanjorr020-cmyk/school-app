@@ -43,12 +43,12 @@
       <button class="tab" data-tab="grades">Оценки</button>
       <button class="tab" data-tab="attendance">Посещаемость</button>
       <button class="tab" data-tab="leads">Заявки</button>
-      <button class="tab active" data-tab="parent">Моё обучение</button>
+      <button class="tab active" data-tab="parent">Вид ученика</button>
     </nav>
     <nav id="student-nav" class="student-nav" aria-label="Разделы ученика" hidden>
-      <button type="button" class="active" data-learning-section="lesson">Урок</button>
-      <button type="button" data-learning-section="homework">Домашка</button>
-      <button type="button" data-learning-section="progress">Прогресс</button>
+      <button type="button" class="active" data-learning-section="lesson"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg><span>Урок</span></button>
+      <button type="button" data-learning-section="homework"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg><span>Домашка</span><span class="nav-dot" id="nav-dot" hidden></span></button>
+      <button type="button" data-learning-section="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V12M10 20V6M16 20v-9M22 20H2"/></svg><span>Прогресс</span></button>
     </nav>
   </header>
   <p class="demo-notice"><span id="demo-current-role"></span></p>
@@ -174,7 +174,7 @@
 
     <!-- Кабинет родителя -->
     <section id="tab-parent" class="panel active">
-      <h1 class="app-title">Моё обучение</h1><div id="next-lesson-view"></div><div id="homework-view"></div><div id="learning-progress"></div><div id="learning-overview" class="learning-overview"></div>
+      <h2 id="section-title" class="app-title">Урок</h2><div id="next-lesson-view"></div><div id="homework-view"></div><div id="learning-progress"></div><div id="learning-overview" class="learning-overview"></div>
       <div class="row filter">
         <label>Ученик:
           <select id="parent-student"></select>
