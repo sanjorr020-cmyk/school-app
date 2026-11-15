@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FASTSPEAK — Личный кабинет</title>
   <meta name="description" content="Telegram Mini App онлайн-школы FastSpeak: занятия, расписание, прогресс и сообщения." />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=20261115-ui" />
 </head>
 <body data-demo-role="none">
 
   <main id="demo-login" class="demo-login">
     <div class="brand-name">FASTSPEAK</div>
     <h1 class="entry-title">Личный кабинет</h1>
-    <p class="entry-sub">Так выглядит кабинет ученика онлайн‑школы: ближайший урок, домашка и прогресс. Откройте демо и посмотрите.</p>
+    <p class="entry-sub">Уроки, задания и прогресс обучения.</p>
     <div class="entry-roles">
       <button type="button" class="entry-role" data-demo-pick="student"><b>Я ученик</b><span>Уроки, домашка, прогресс</span></button>
       <button type="button" class="entry-role" data-demo-pick="admin"><b>Я администратор</b><span>Ученики, пакеты, заявки</span></button>
@@ -29,14 +29,14 @@
   </main>
 
   <section id="cabinet" hidden class="cabinet-shell" aria-label="Личный кабинет школы">
-  <div class="app-banner"><button type="button" class="att-btn" id="change-demo-role">Сменить вид</button></div>
   <header class="topbar">
     <div class="brand">
       <div>
         <div class="brand-name" id="brand-name">FASTSPEAK</div>
-        <div class="brand-sub" id="brand-sub">Расписание, оценки и сообщения для родителей</div>
+        <div class="brand-sub" id="brand-sub" hidden>Расписание, оценки и сообщения для родителей</div>
       </div>
     </div>
+    <div class="header-actions"><span id="demo-current-role" class="demo-badge"></span><button type="button" class="att-btn" id="change-demo-role">Сменить вид</button></div>
     <nav class="tabs" id="tabs" aria-label="Разделы администратора">
       <button class="tab" data-tab="students">Ученики</button>
       <button class="tab" data-tab="schedule">Расписание</button>
@@ -51,7 +51,6 @@
       <button type="button" data-learning-section="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V12M10 20V6M16 20v-9M22 20H2"/></svg><span>Прогресс</span></button>
     </nav>
   </header>
-  <p class="demo-notice"><span id="demo-current-role"></span></p>
 
   <main class="wrap">
     <!-- Ученики -->
@@ -198,8 +197,8 @@
   </section>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="config.js"></script>
-  <script src="app.js"></script>
-  <script src="extras.js"></script>
+  <script src="app.js?v=20261115-ui"></script>
+  <script src="extras.js?v=20261115-ui"></script>
   <script>
     document.querySelectorAll('input, select').forEach(function (field) {
       if (!field.labels.length && !field.getAttribute('aria-label')) {
