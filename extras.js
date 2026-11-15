@@ -291,7 +291,7 @@
   let studentId = null;
   let section = 'lesson';
   const dateParts = (date) => Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Bishkek', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: 'Asia/Almaty', year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
   }).formatToParts(date).map((p) => [p.type, p.value]));
   const dateISO = (date) => { const p = dateParts(date); return p.year + '-' + p.month + '-' + p.day; };
@@ -300,7 +300,7 @@
     catch (_) { return ''; }
   };
   const formatDate = (iso) => new Date(iso + 'T12:00:00+06:00').toLocaleDateString('ru-RU', {
-    timeZone: 'Asia/Bishkek', day: 'numeric', month: 'long', year: 'numeric'
+    timeZone: 'Asia/Almaty', day: 'numeric', month: 'long', year: 'numeric'
   });
   function persist(statusId, successText) {
     const ok = window.schoolSave();
@@ -395,7 +395,7 @@
     if (!Number.isFinite(start) || start + 60 * 60 * 1000 < Date.now()) return '<section class="lesson-focus"><p class="eyebrow">БЛИЖАЙШИЙ УРОК</p><h2>Ожидаем следующий урок</h2><p>Предыдущее занятие завершилось. Администратор добавит следующую дату.</p></section>';
     const url = validUrl(l.url);
     return '<section class="lesson-focus"><p class="eyebrow">БЛИЖАЙШИЙ УРОК' + (l.demo ? ' · ДЕМО' : '') + '</p><h2>' + esc(l.title || 'Английский язык') + '</h2>' +
-      '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Бишкеку (UTC+6)</p>' +
+      '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
       (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet · демо ↗' : 'Подключиться к уроку ↗') + '</a>' :
         '<button class="btn" type="button" disabled>Ссылка пока не добавлена</button>') +
@@ -428,7 +428,7 @@
     if (!s) return;
     const l = s.nextLesson || {};
     detail.insertAdjacentHTML('beforeend', '<form id="learning-admin-form" class="flow-form"><h3>Ближайший онлайн-урок</h3>' +
-      '<label>Дата<input name="date" type="date" value="' + esc(l.date || '') + '"></label><label>Время по Бишкеку (UTC+6)<input name="time" type="time" value="' + esc(l.time || '') + '"></label>' +
+      '<label>Дата<input name="date" type="date" value="' + esc(l.date || '') + '"></label><label>Время по Астане (UTC+5)<input name="time" type="time" value="' + esc(l.time || '') + '"></label>' +
       '<label>Название урока<input name="title" maxlength="120" value="' + esc(l.title || '') + '"></label><label>Преподаватель<input name="teacher" maxlength="120" value="' + esc(l.teacher || '') + '"></label>' +
       '<label>Ссылка на Zoom или Meet (HTTPS)<input name="url" type="url" placeholder="https://meet.google.com/…" value="' + esc(l.url || '') + '"></label>' +
       '<label>Комментарий преподавателя<textarea name="comment" maxlength="2000" rows="3">' + esc(s.teacherComment || '') + '</textarea></label>' +
