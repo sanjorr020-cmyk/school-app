@@ -133,7 +133,7 @@ function renderStudents() {
   box.innerHTML = Object.keys(byClass)
     .sort((a, b) => CLASSES.indexOf(a) - CLASSES.indexOf(b))
     .map((cls) => `
-      <h3>Класс ${esc(cls)} · ${byClass[cls].length}</h3>
+      <h3>Класс ${esc(cls)} (${byClass[cls].length})</h3>
       ${studentsOf(cls).map((s) => `
         <div class="card">
           <div>${esc(s.name)}</div>
@@ -185,8 +185,8 @@ function renderSchedule() {
     if (!day.length) return '';
     return `<h3>${WEEKDAY_NAMES[wd]}</h3>` + day.map((l) => `
       <div class="card">
-        <div><b>${esc(l.time)}</b> · ${esc(l.subject)}
-          <div class="meta">${esc(l.teacher || '')}${l.room ? ' · каб. ' + esc(l.room) : ''}</div>
+        <div><b>${esc(l.time)}</b> ${esc(l.subject)}
+          <div class="meta">${esc(l.teacher || '')}${l.room ? ', каб. ' + esc(l.room) : ''}</div>
         </div>
         <button class="att-btn" data-del-lesson="${l.id}">Удалить</button>
       </div>`).join('');
@@ -234,7 +234,7 @@ function renderReplacements() {
   box.innerHTML = list.map((r) => `
     <div class="card repl">
       <div>
-        <b>${fmtDate(r.date)}</b> · ${esc(r.class || 'Все классы')}${r.time ? ' · ' + esc(r.time) : ''}
+        <b>${fmtDate(r.date)}</b>, ${esc(r.class || 'все классы')}${r.time ? ', ' + esc(r.time) : ''}
         <div class="meta">${esc(r.text)}</div>
       </div>
       <button class="att-btn" data-del-repl="${r.id}">Удалить</button>
@@ -276,7 +276,7 @@ function renderMessages() {
   box.innerHTML = list.map((m) => `
     <div class="card">
       <div>
-        <b>${esc(m.class)}</b> · ${fmtDate(m.date)}
+        <b>${esc(m.class)}</b>, ${fmtDate(m.date)}
         <div class="meta">${esc(m.text)}</div>
       </div>
       <button class="att-btn" data-del-msg="${m.id}">Удалить</button>
@@ -392,8 +392,8 @@ function renderAttendance() {
 
   box.innerHTML = `
     <p class="summary">
-      ${fmtDate(date)} · Был: ${counts.present} · Опоздал: ${counts.late} · Не был: ${counts.absent}
-      ${counts.none ? ` · Не отмечено: ${counts.none}` : ''}
+      ${fmtDate(date)}: был ${counts.present}, опоздал ${counts.late}, не был ${counts.absent}
+      ${counts.none ? `, не отмечено: ${counts.none}` : ''}
     </p>
     ${list.map((s) => {
       const st = day[s.id];
@@ -448,13 +448,13 @@ function renderParent() {
     const rows = lessons.map((l) => {
       const rep = reps.find((r) => r.time && r.time === l.time);
       return `<div class="card ${rep ? 'repl' : ''}">
-        <div><b>${esc(l.time)}</b> · ${esc(l.subject)}
-          <div class="meta">${esc(l.teacher || '')}${l.room ? ' · каб. ' + esc(l.room) : ''}</div>
+        <div><b>${esc(l.time)}</b> ${esc(l.subject)}
+          <div class="meta">${esc(l.teacher || '')}${l.room ? ', каб. ' + esc(l.room) : ''}</div>
           ${rep ? `<div class="meta repl-text">Изменение: ${esc(rep.text)}</div>` : ''}
         </div></div>`;
     }).join('');
     const extra = reps.filter((r) => !r.time || !lessons.some((l) => l.time === r.time))
-      .map((r) => `<div class="card repl"><div>${r.time ? esc(r.time) + ' · ' : ''}<span class="repl-text">${esc(r.text)}</span></div></div>`)
+      .map((r) => `<div class="card repl"><div>${r.time ? esc(r.time) + ' ' : ''}<span class="repl-text">${esc(r.text)}</span></div></div>`)
       .join('');
     scheduleHtml = (rows || extra) ? rows + extra : '<div class="empty">На этот день расписания нет.</div>';
   }
@@ -487,13 +487,13 @@ function renderParent() {
     : '<div class="empty">Сообщений от школы пока нет.</div>';
 
   box.innerHTML = `
-    <div class="parent-head">${esc(s.name)} · ${esc(s.class)}</div>
-    <h3>Расписание · ${fmtDate(date)}${wd ? ' · ' + WEEKDAY_NAMES[wd] : ''}</h3>
+    <div class="parent-head">${esc(s.name)}, ${esc(s.class)}</div>
+    <h3>Расписание на ${fmtDate(date)}${wd ? ', ' + WEEKDAY_NAMES[wd].toLowerCase() : ''}</h3>
     ${scheduleHtml}
     <h3>Оценки</h3>
     ${gradesHtml}
     <h3>Посещаемость (за всё время)</h3>
-    <p class="summary">Был: ${counts.present} · Опоздал: ${counts.late} · Не был: ${counts.absent}</p>
+    <p class="summary">Был: ${counts.present}, опоздал: ${counts.late}, не был: ${counts.absent}</p>
     <h3>Сообщения от школы</h3>
     ${msgsHtml}`;
 }
@@ -525,7 +525,6 @@ function applyBranding() {
     $('brand-name').textContent = CONFIG.name;
   }
   if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
-  if (CONFIG.shortMark) $('brand-mark').textContent = CONFIG.shortMark;
 }
 
 function renderAll() {
