@@ -38,6 +38,11 @@
     <!-- Расписание и замены -->
     <section id="tab-schedule" class="panel">
       <h2>Расписание</h2>
+      <div class="row">
+        <input id="admin-key" type="password" placeholder="Ключ администратора для уведомлений" autocomplete="off" />
+        <button type="button" id="save-key" class="btn">Сохранить ключ</button>
+      </div>
+      <p id="api-status" class="summary"></p>
       <div class="row filter">
         <label>Класс:
           <select id="sch-class-view"></select>
@@ -126,6 +131,15 @@
         <label>Дата: <input id="parent-date" type="date" /></label>
       </div>
       <div id="parent-view"></div>
+
+      <h3>Записаться на диагностику</h3>
+      <form id="lead-form" class="row">
+        <input id="lead-name" type="text" placeholder="Фамилия и имя ученика" required />
+        <select id="lead-class" required></select>
+        <input id="lead-time" type="text" placeholder="Удобное время" required />
+        <button type="submit" class="btn">Отправить</button>
+      </form>
+      <p id="lead-status" class="summary"></p>
     </section>
   </main>
 

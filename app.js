@@ -115,6 +115,7 @@ function renderStudentSelects() {
   fillSelect($('lesson-class'), classOptions());
   fillSelect($('rep-class'), [{ value: '', label: 'Все классы' }, ...classOptions()]);
   fillSelect($('msg-class'), classOptions());
+  fillSelect($('lead-class'), classOptions());
   fillSelect($('grade-student'),
     studentsOf('').map((s) => ({ value: s.id, label: studentLabel(s) })),
     { placeholder: 'Выберите ученика' });
@@ -249,20 +250,23 @@ $('replacements-list').addEventListener('click', (e) => {
   renderAll();
 });
 
-$('rep-form').addEventListener('submit', (e) => {
+$('rep-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('rep-text').value.trim();
   if (!text) return;
-  state.replacements.push({
+  const item = {
     id: newId(),
     date: $('rep-date').value || todayISO(),
     class: $('rep-class').value,
     time: $('rep-time').value,
     text,
-  });
+  };
+  state.replacements.push(item);
   save();
   $('rep-text').value = '';
   renderAll();
+  const r = await postApi('/api/events', { type: 'replacement', date: item.date, class: item.class, time: item.time, text }, { admin: true });
+  setApiStatus(r.ok ? `Замена отправлена родителям: ${r.sent}` : `Замена сохранена, уведомление не отправлено: ${r.error}`);
 });
 
 // ---------- Сообщения классу ----------
@@ -291,7 +295,7 @@ $('messages-list').addEventListener('click', (e) => {
   renderAll();
 });
 
-$('msg-form').addEventListener('submit', (e) => {
+$('msg-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const text = $('msg-text').value.trim();
   const cls = $('msg-class').value;
@@ -300,6 +304,8 @@ $('msg-form').addEventListener('submit', (e) => {
   save();
   $('msg-text').value = '';
   renderAll();
+  const r = await postApi('/api/events', { type: 'message', class: cls, text }, { admin: true });
+  setApiStatus(r.ok ? `Сообщение отправлено родителям: ${r.sent}` : `Сообщение сохранено, уведомление не отправлено: ${r.error}`);
 });
 
 // ---------- Оценки ----------
@@ -412,7 +418,7 @@ $('att-date').value = todayISO();
 $('att-date').addEventListener('change', renderAttendance);
 $('att-class-filter').addEventListener('change', renderAttendance);
 
-$('attendance-list').addEventListener('click', (e) => {
+$('attendance-list').addEventListener('click', async (e) => {
   const { attStudent: sid, attState: st } = e.target.dataset;
   if (!sid || !st) return;
   const date = $('att-date').value || todayISO();
@@ -421,6 +427,13 @@ $('attendance-list').addEventListener('click', (e) => {
   else state.attendance[date][sid] = st;
   save();
   renderAttendance();
+
+  // Уведомляем родителей только о новом опоздании или пропуске.
+  const student = state.students.find((x) => x.id === sid);
+  if (student && (st === 'late' || st === 'absent') && state.attendance[date][sid] === st) {
+    const r = await postApi('/api/events', { type: 'attendance', studentName: student.name, class: student.class, status: st, date }, { admin: true });
+    setApiStatus(r.ok ? `Родители уведомлены: ${r.sent}` : `Отметка сохранена, уведомление не отправлено: ${r.error}`);
+  }
 });
 
 // ---------- Кабинет родителя ----------
@@ -526,6 +539,54 @@ function applyBranding() {
   }
   if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
 }
+
+// ---------- Связь с сервером бота: уведомления и заявки ----------
+const API_URL = (CONFIG.apiUrl || '').replace(/\/$/, '');
+const ADMIN_KEY_NAME = 'school-admin-key';
+
+function setApiStatus(text) {
+  $('api-status').textContent = text;
+}
+
+async function postApi(path, body, { admin = false } = {}) {
+  if (!API_URL) return { ok: false, error: 'сервер не подключён (apiUrl в config.js)' };
+  const headers = { 'content-type': 'application/json' };
+  if (admin) {
+    let key = '';
+    try { key = localStorage.getItem(ADMIN_KEY_NAME) || ''; } catch (e) { /* хранилище недоступно */ }
+    headers['x-admin-key'] = key;
+  }
+  try {
+    const res = await fetch(API_URL + path, { method: 'POST', headers, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    return data.ok ? data : { ok: false, error: data.error || `ошибка ${res.status}` };
+  } catch (e) {
+    return { ok: false, error: 'нет связи с сервером' };
+  }
+}
+
+$('save-key').addEventListener('click', () => {
+  const key = $('admin-key').value.trim();
+  try { localStorage.setItem(ADMIN_KEY_NAME, key); } catch (e) { /* хранилище недоступно */ }
+  $('admin-key').value = '';
+  setApiStatus(key ? 'Ключ сохранён в этом браузере.' : 'Ключ удалён.');
+});
+
+$('lead-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const r = await postApi('/api/lead', {
+    name: $('lead-name').value.trim(),
+    class: $('lead-class').value,
+    time: $('lead-time').value.trim(),
+  });
+  if (r.ok) {
+    $('lead-form').reset();
+    fillSelect($('lead-class'), classOptions());
+    $('lead-status').textContent = 'Заявка принята. Администратор свяжется с вами.';
+  } else {
+    $('lead-status').textContent = `Заявка не отправлена: ${r.error}`;
+  }
+});
 
 function renderAll() {
   renderStudentSelects();
