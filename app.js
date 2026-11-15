@@ -38,16 +38,9 @@ function applyTelegramTheme() {
   if (!TG) return;
   TG.ready();
   TG.expand();
-  const p = TG.themeParams || {};
-  const root = document.documentElement.style;
-  const set = (name, value) => value && root.setProperty(name, value);
-  set('--bg', p.secondary_bg_color);
-  set('--card', p.bg_color);
-  set('--text', p.text_color);
-  set('--muted', p.hint_color);
-  set('--accent', p.button_color);
-  set('--border', p.section_separator_color);
-  document.body.style.color = p.text_color || '';
+  // Сохраняем фирменную тему школы внутри Telegram.
+  if (TG.setHeaderColor) TG.setHeaderColor('#071e60');
+  if (TG.setBackgroundColor) TG.setBackgroundColor('#071e60');
 }
 
 let state = load();
@@ -547,7 +540,7 @@ function applyBranding() {
   if (CONFIG.accent) root.setProperty('--accent', CONFIG.accent);
   if (CONFIG.accent2) root.setProperty('--accent-2', CONFIG.accent2);
   if (CONFIG.name) {
-    document.title = CONFIG.name;
+    document.title = CONFIG.name + ' — Школа разговорного английского';
     $('brand-name').textContent = CONFIG.name;
   }
   if (CONFIG.subtitle) $('brand-sub').textContent = CONFIG.subtitle;
