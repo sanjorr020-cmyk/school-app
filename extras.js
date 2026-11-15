@@ -355,7 +355,7 @@
     document.body.dataset.demoRole = role;
     $('demo-login').hidden = true; $('cabinet').hidden = false;
     $('student-nav').hidden = role !== 'student';
-    $('demo-current-role').textContent = role === 'student' ? 'Демо · Ученик' : 'Демо · Администратор';
+    $('demo-current-role').textContent = role === 'student' ? 'Демо' : 'Администратор · демо';
     if (studentId) $('parent-student').value = studentId;
     activateTab(role === 'student' ? 'parent' : 'students');
     showSection('lesson');
@@ -449,7 +449,7 @@
     const left = Math.max(0, pkg.total - used);
     const price = confirmedPrices().find((p) => p.id === pkg.priceId && p.lessons === pkg.total);
     const money = (n) => new Intl.NumberFormat('ru-KZ', { maximumFractionDigits: 2 }).format(n) + ' ₸';
-    return '<section class="package-focus"><p class="eyebrow">МОЙ ПАКЕТ</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
+    return '<section class="package-focus"><p class="eyebrow">Пакет занятий</p><h2>Осталось ' + left + ' из ' + esc(pkg.total) + '</h2>' +
       '<progress value="' + Math.min(used, pkg.total) + '" max="' + esc(pkg.total) + '" aria-label="Списано занятий в пакете"></progress>' +
       (used > pkg.total ? '<p class="summary">Отметок сверх пакета: ' + (used - pkg.total) + '.</p>' : '') +
       (price ? '<p class="lesson-price">Одно занятие — ' + money(price.totalPriceKzt / price.lessons) +
@@ -562,22 +562,22 @@
     return '<section class="lesson-focus">' + poster + '<h2>Ближайший урок: ' + esc(l.title || 'Английский язык') + '</h2>' +
       '<p class="lesson-when">' + esc(formatDate(l.date)) + ' · ' + esc(l.time) + '</p><p class="meta">Время по Астане (UTC+5)</p>' +
       '<p>Преподаватель: ' + esc(l.teacher || 'Уточняется') + '</p>' +
-      (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet · демо ↗' : 'Подключиться к уроку ↗') + '</a>' :
+      (url ? '<a class="btn join-lesson" data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + (l.demo ? 'Открыть Google Meet' : 'Подключиться к уроку') + '</a>' :
         '<button class="btn" type="button" disabled>Ссылка пока не добавлена</button>') +
       '<button type="button" class="att-btn calendar-button" data-add-calendar>Добавить урок в календарь</button><p id="calendar-status" role="status" class="summary"></p>' +
-      (l.demo ? '<p class="summary">Учебный пример: открывает главную Google Meet, не реальное занятие.</p>' : '') + '</section>';
+      (l.demo ? '<p class="summary">Демо-ссылка открывает Google Meet без подключения к уроку.</p>' : '') + '</section>';
   }
   function homeworkView(s) {
     if (!s) return '';
     const tasks = s.homework || [];
-    return '<section class="homework-section"><h2>Домашнее задание</h2><p class="summary">Ответ сохраняется только в этом браузере. Преподавателю он не отправляется.</p>' +
+    return '<section class="homework-section"><h2>Домашнее задание</h2><p class="summary">Ответ сохранится на этом устройстве. Преподаватель его не получит.</p>' +
       (tasks.length ? tasks.map((h, index) => {
         const url = validUrl(h.materials);
         return '<article class="homework-card">' + videoPreview(index % 2 ? 'board' : 'homework') + '<h3>' + esc(h.title) + '</h3><p class="meta">Срок: ' + esc(formatDate(h.due)) +
           (h.due < dateISO(new Date()) && !h.answer ? ' · Срок прошёл' : '') + '</p>' +
-          (url ? '<a data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Материалы задания ↗</a>' : '') +
+          (url ? '<a data-external-link href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Материалы задания</a>' : '') +
           '<form class="homework-answer flow-form" data-homework-id="' + esc(h.id) + '"><label>Ваш ответ<textarea name="answer" required maxlength="8000" rows="4">' + esc(h.answer || '') + '</textarea></label>' +
-          '<button class="btn" type="submit">Сохранить ответ в браузере</button><p class="summary answer-status" role="status">' +
+          '<button class="btn" type="submit">Сохранить ответ</button><p class="summary answer-status" role="status">' +
           (h.savedAt ? 'Ответ сохранён локально. Не отправлен преподавателю.' : '') + '</p></form></article>';
       }).join('') : '<div class="empty">Пока нет заданий. Они появятся после добавления администратором.</div>') + '</section>';
   }
